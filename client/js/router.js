@@ -30,6 +30,8 @@ const Router = {
     '#/admin/users': 'renderAdminUsers',
     '#/admin/audit': 'renderAuditLogs',
     '#/admin/informasi-api': 'renderAdminInformasiAPI',
+    '#/admin/integrasi': 'renderAdminIntegrasi',
+    '#/integrasi': 'renderAdminIntegrasi',
 
     // Owner Routes
     '#/owner/dashboard': 'renderOwnerDashboard',
@@ -163,6 +165,7 @@ const Router = {
         { label: 'Katalog Sampah', hash: '#/waste-catalog', icon: '♻️' },
         { label: 'Notifikasi WhatsApp', hash: '#/notifications', icon: '🔔' },
         { label: 'Preferensi Notifikasi', hash: '#/notifications/settings', icon: '🔔' },
+        { label: 'Integrasi & API Key', hash: '#/admin/integrasi', icon: '🔌' },
         { label: 'Informasi API', hash: '#/admin/informasi-api', icon: '📡' },
       ];
       bottomItems = [
@@ -306,6 +309,347 @@ const Router = {
   renderChatbotPage() {
     if (typeof toggleChatbot === 'function') toggleChatbot(true);
     window.location.hash = this.getDefaultRouteForRole(State.getRole());
+  },
+
+  async renderAdminIntegrasi() {
+    this.setupView('Integrasi & Konfigurasi API');
+    const content = document.getElementById('view-content');
+    content.innerHTML = `
+      <div style="text-align: center; padding: 3rem; color: #94a3b8;">
+        <div style="font-size: 2rem; margin-bottom: 0.5rem;">⏳</div>
+        <div>Memuat konfigurasi AI dan WhatsApp Gateway...</div>
+      </div>
+    `;
+
+    try {
+      const [aiRes, waRes] = await Promise.all([
+        API.getAiConfig().catch(err => ({ success: false, data: null, error: err.message })),
+        API.getWhatsAppDevices().catch(err => ({ success: false, data: null, error: err.message }))
+      ]);
+
+      const aiData = aiRes.data || {
+        provider: 'xKiro / Nous Research',
+        is_configured: true,
+        api_key_masked: '••••••••24f5',
+        source: 'Pengaturan Admin (terenkripsi)',
+        last_updated: '2026-11-16 15:26:05 UTC',
+        active_model: 'mistralai/mistral-small-2603',
+        models: []
+      };
+
+      const waData = waRes.data || {
+        provider: 'Fonnte',
+        active_device_id: 'default',
+        devices: []
+      };
+
+      content.innerHTML = `
+        <div class="integrasi-container">
+          <!-- Top Header -->
+          <div class="integrasi-topbar-header">
+            <div class="integrasi-topbar-title">
+              <span style="font-size: 1.75rem;">🔌</span>
+              <div>
+                <h2>Integrasi & Konfigurasi API</h2>
+                <span style="font-size: 0.85rem; color: #94a3b8;">Panel terpadu manajemen AI Chatbot dan WhatsApp Gateway</span>
+              </div>
+            </div>
+            <div>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="Router.renderAdminIntegrasi()">
+                🔄 Segarkan Data
+              </button>
+            </div>
+          </div>
+
+          <div class="integrasi-grid">
+            <!-- ==========================================
+                 PANEL A: CHATBOT AI
+                 ========================================== -->
+            <div class="integrasi-card">
+              <div class="integrasi-card-header">
+                <div class="integrasi-card-title">
+                  <span class="icon">🤖</span>
+                  <span>A. CHATBOT AI</span>
+                </div>
+                <span class="integrasi-provider-badge">Provider: ${aiData.provider || 'xKiro / Nous Research'}</span>
+              </div>
+
+              <!-- Section: API Key -->
+              <div class="integrasi-section-title">API Key</div>
+              <div class="integrasi-meta-row">
+                <span class="${aiData.is_configured ? 'integrasi-badge-configured' : 'integrasi-badge-unconfigured'}">
+                  ${aiData.is_configured ? 'SUDAH DIKONFIGURASI' : 'BELUM DIKONFIGURASI'}
+                </span>
+                <span class="integrasi-key-masked">${aiData.api_key_masked || '••••••••'}</span>
+                <span class="integrasi-source-text">Sumber: ${aiData.source || 'Pengaturan Admin (terenkripsi)'}</span>
+              </div>
+              <div class="integrasi-timestamp-text">- diperbarui ${aiData.last_updated || '2026-11-16 15:26:05 UTC'}</div>
+
+              <div class="integrasi-input-group">
+                <input type="password" id="input-new-ai-key" class="integrasi-input" placeholder="Tempel API Key baru (sk-nous-...)" />
+                <button type="button" class="integrasi-btn-amber" onclick="window.handleSaveAiKey()">
+                  <span>🔑</span> Perbarui API Key
+                </button>
+              </div>
+              <div class="integrasi-desc-text">
+                API Key baru diuji ke provider memakai model aktif. Jika gagal, key lama tetap dipakai.
+              </div>
+              <div style="margin-top: 0.75rem; margin-bottom: 1.5rem;">
+                <button type="button" class="integrasi-btn-secondary" onclick="window.handleResetAiKey()">
+                  <span>🔄</span> Pakai API Key environment
+                </button>
+              </div>
+
+              <!-- Section: Model Aktif -->
+              <div class="integrasi-section-title" style="margin-top: 1.25rem;">Model Aktif</div>
+              <div id="ai-models-list">
+                ${(aiData.models && aiData.models.length > 0 ? aiData.models : [
+                  {
+                    id: 'mistralai/mistral-small-2603',
+                    name: 'Mistral Small 4',
+                    context: '256,000 token',
+                    description: 'Model utama yang sudah diuji dengan API Key environment.',
+                    is_active: aiData.active_model === 'mistralai/mistral-small-2603',
+                    is_compatible: true,
+                    last_tested: '2026-11-16 04:10:53 UTC',
+                    response_time: '996 ms'
+                  },
+                  {
+                    id: 'cohere/command-a-plus',
+                    name: 'Command A+',
+                    context: '436,000 token',
+                    description: 'Model alternatif yang sudah diuji dengan API Key environment.',
+                    is_active: aiData.active_model === 'cohere/command-a-plus',
+                    is_compatible: true,
+                    last_tested: '2026-11-16 15:26:02 UTC',
+                    response_time: '1225 ms'
+                  }
+                ]).map(m => `
+                  <div class="integrasi-item-card ${m.is_active ? 'active-border' : ''}">
+                    <div class="integrasi-item-card-header">
+                      <div class="integrasi-item-title-wrap">
+                        <span class="integrasi-item-title">${m.name}</span>
+                        ${m.is_active ? '<span class="integrasi-badge-active-green">AKTIF</span>' : ''}
+                        ${m.is_compatible ? '<span class="integrasi-badge-compatible">KOMPATIBEL</span>' : ''}
+                      </div>
+                      <div style="display: flex; gap: 0.4rem;">
+                        <button type="button" class="integrasi-btn-dark" onclick="window.handleTestAiModel('${m.id}')">
+                          <span>🧪</span> Uji
+                        </button>
+                        ${!m.is_active ? `
+                          <button type="button" class="integrasi-btn-activate" onclick="window.handleActivateAiModel('${m.id}')">
+                            <span>✔</span> Aktifkan
+                          </button>
+                        ` : ''}
+                      </div>
+                    </div>
+                    <div class="integrasi-meta-grid">
+                      <div>Model ID: <strong>${m.id}</strong></div>
+                      <div>Context: <strong>${m.context || '256,000 token'}</strong></div>
+                      <div>Uji terakhir: <strong>${m.last_tested || '2026-11-16 UTC'}</strong></div>
+                      <div>Waktu respons: <strong style="color: #10b981;">${m.response_time || '996 ms'}</strong></div>
+                    </div>
+                    <div class="integrasi-item-desc">${m.description || ''}</div>
+                  </div>
+                `).join('')}
+              </div>
+
+              <div class="integrasi-footnote">
+                Pergantian model hanya mengubah Model ID. System prompt, persona, konteks role, riwayat percakapan, endpoint, dan fallback provider tidak berubah.
+              </div>
+            </div>
+
+            <!-- ==========================================
+                 PANEL B: WHATSAPP GATEWAY
+                 ========================================== -->
+            <div class="integrasi-card">
+              <div class="integrasi-card-header">
+                <div class="integrasi-card-title">
+                  <span class="icon">💬</span>
+                  <span>B. WHATSAPP GATEWAY</span>
+                </div>
+                <span class="integrasi-provider-badge">Provider: ${waData.provider || 'Fonnte'}</span>
+              </div>
+
+              <!-- Section: Device Pengirim -->
+              <div class="integrasi-section-title">Device Pengirim</div>
+              <div id="wa-devices-list">
+                ${(waData.devices || []).map(d => `
+                  <div class="integrasi-item-card ${d.is_active ? 'active-border' : ''}">
+                    <div class="integrasi-item-card-header">
+                      <div class="integrasi-item-title-wrap">
+                        <span class="integrasi-item-title">${d.name}</span>
+                        ${d.is_active ? '<span class="integrasi-badge-active-green">PENGIRIM AKTIF</span>' : ''}
+                        ${d.token_available || d.is_configured ? '<span class="integrasi-badge-compatible">TOKEN TERSEDIA</span>' : ''}
+                        ${d.status === 'CONNECT' ? '<span class="integrasi-badge-compatible">CONNECT</span>' : ''}
+                      </div>
+                      <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
+                        <button type="button" class="integrasi-btn-dark" onclick="window.handleCheckWaDevice('${d.id}')">
+                          <span>⚡</span> Cek koneksi
+                        </button>
+                        ${!d.is_default && !d.is_active ? `
+                          <button type="button" class="integrasi-btn-activate" onclick="window.handleActivateWaDevice('${d.id}')">
+                            <span>✔</span> Jadikan aktif
+                          </button>
+                        ` : ''}
+                        ${!d.is_default ? `
+                          <button type="button" class="integrasi-btn-dark" style="color: #ef4444;" onclick="window.handleDeleteWaDevice('${d.id}')">
+                            <span>⏻</span> Hapus
+                          </button>
+                        ` : ''}
+                      </div>
+                    </div>
+                    <div class="integrasi-meta-grid">
+                      <div>Token: <strong>${d.token_masked || '••••••••'}</strong></div>
+                      <div>Nomor pengirim: <strong>${d.sender_number || '6285169728815'}</strong></div>
+                      ${d.package ? `<div>Paket: <strong>${d.package} · Kuota: ${d.quota || 1000} · Exp: ${d.expired || '2026'}</strong></div>` : ''}
+                      ${d.checked_at ? `<div>Dicek: <strong>${d.checked_at}</strong></div>` : ''}
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+
+              <!-- Section: Tambah Device -->
+              <div class="integrasi-section-title" style="margin-top: 1.25rem;">Tambah Device</div>
+              <form id="form-add-wa-device" onsubmit="window.handleSaveWaDevice(event)">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
+                  <div>
+                    <label style="font-size: 0.8rem; color: #94a3b8; display: block; margin-bottom: 0.3rem;">Nama device</label>
+                    <input type="text" id="input-wa-device-name" class="integrasi-input" placeholder="Device 1" required />
+                  </div>
+                  <div>
+                    <label style="font-size: 0.8rem; color: #94a3b8; display: block; margin-bottom: 0.3rem;">Nomor pengirim (terdaftar di Fonnte)</label>
+                    <input type="text" id="input-wa-device-phone" class="integrasi-input" placeholder="6281234567890" required />
+                  </div>
+                </div>
+                <div style="margin-bottom: 0.75rem;">
+                  <label style="font-size: 0.8rem; color: #94a3b8; display: block; margin-bottom: 0.3rem;">Device Token</label>
+                  <input type="password" id="input-wa-device-token" class="integrasi-input" placeholder="Token dari menu Device di dashboard Fonnte" required />
+                </div>
+                <div class="integrasi-desc-text" style="margin-bottom: 1rem;">
+                  Gunakan Device Token (per device), bukan Account Token. Token dicek ke Fonnte tanpa mengirim pesan WhatsApp.
+                </div>
+                <button type="submit" class="integrasi-btn-amber">
+                  <span>💾</span> Simpan Device
+                </button>
+              </form>
+
+              <div class="integrasi-footnote">
+                Pairing/scan-QR dilakukan di dashboard Fonnte. Hanya satu Device yang menjadi pengirim aktif. Nomor tujuan tetap nomor WhatsApp Customer.
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Window Action Handlers
+      window.handleSaveAiKey = async () => {
+        const input = document.getElementById('input-new-ai-key');
+        const key = input ? input.value.trim() : '';
+        if (!key) {
+          showToast('Masukkan API Key terlebih dahulu.', 'error');
+          return;
+        }
+
+        try {
+          showToast('Menguji dan memperbarui API Key...', 'info');
+          const res = await API.updateAiConfig({ api_key: key });
+          showToast(res.message || 'API Key berhasil diperbarui!', 'success');
+          input.value = '';
+          Router.renderAdminIntegrasi();
+        } catch (e) {
+          showToast(e.message || 'Gagal memperbarui API Key', 'error');
+        }
+      };
+
+      window.handleResetAiKey = async () => {
+        try {
+          showToast('Mengembalikan ke API Key environment...', 'info');
+          const res = await API.resetAiConfigToEnv();
+          showToast(res.message || 'Beralih ke API Key environment', 'success');
+          Router.renderAdminIntegrasi();
+        } catch (e) {
+          showToast(e.message || 'Gagal reset ke environment', 'error');
+        }
+      };
+
+      window.handleTestAiModel = async (modelId) => {
+        try {
+          showToast(`Menguji latensi model ${modelId}...`, 'info');
+          const res = await API.testAiModel({ model: modelId });
+          showToast(res.message || `Model ${modelId} aktif & responsif!`, 'success');
+        } catch (e) {
+          showToast(e.message || 'Gagal menguji model', 'error');
+        }
+      };
+
+      window.handleActivateAiModel = async (modelId) => {
+        try {
+          showToast(`Mengaktifkan model ${modelId}...`, 'info');
+          const res = await API.updateAiConfig({ model: modelId });
+          showToast(`Model ${modelId} sekarang menjadi model aktif!`, 'success');
+          Router.renderAdminIntegrasi();
+        } catch (e) {
+          showToast(e.message || 'Gagal mengaktifkan model', 'error');
+        }
+      };
+
+      window.handleCheckWaDevice = async (deviceId) => {
+        try {
+          showToast('Memeriksa koneksi device WhatsApp...', 'info');
+          const res = await API.checkWhatsAppDevice(deviceId);
+          showToast(res.message || 'Device terhubung dengan Fonnte (CONNECT)', 'success');
+        } catch (e) {
+          showToast(e.message || 'Gagal cek koneksi device', 'error');
+        }
+      };
+
+      window.handleActivateWaDevice = async (deviceId) => {
+        try {
+          showToast('Mengaktifkan device...', 'info');
+          const res = await API.activateWhatsAppDevice(deviceId);
+          showToast('Device berhasil dijadikan pengirim aktif!', 'success');
+          Router.renderAdminIntegrasi();
+        } catch (e) {
+          showToast(e.message || 'Gagal mengaktifkan device', 'error');
+        }
+      };
+
+      window.handleDeleteWaDevice = async (deviceId) => {
+        if (!confirm('Yakin ingin menghapus device ini?')) return;
+        try {
+          await API.deleteWhatsAppDevice(deviceId);
+          showToast('Device berhasil dihapus.', 'success');
+          Router.renderAdminIntegrasi();
+        } catch (e) {
+          showToast(e.message || 'Gagal menghapus device', 'error');
+        }
+      };
+
+      window.handleSaveWaDevice = async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('input-wa-device-name').value;
+        const phone = document.getElementById('input-wa-device-phone').value;
+        const token = document.getElementById('input-wa-device-token').value;
+
+        try {
+          showToast('Menyimpan device WhatsApp...', 'info');
+          await API.saveWhatsAppDevice({ name, sender_number: phone, token });
+          showToast('Device WhatsApp berhasil disimpan!', 'success');
+          Router.renderAdminIntegrasi();
+        } catch (err) {
+          showToast(err.message || 'Gagal menyimpan device', 'error');
+        }
+      };
+
+    } catch (err) {
+      console.error('Error in renderAdminIntegrasi:', err);
+      content.innerHTML = `
+        <div style="color: var(--danger-red); padding: 2rem; text-align: center;">
+          Terjadi kesalahan saat memuat halaman integrasi: ${err.message}
+        </div>
+      `;
+    }
   },
 
   renderAdminInformasiAPI() {

@@ -53,6 +53,13 @@ router.post(
   notificationController.processQueue
 );
 
+// WhatsApp Devices management (Admin & Owner)
+router.get('/devices', requireRoles('ADMIN', 'OWNER', 'PUSTAKAWAN'), notificationController.getDevices);
+router.post('/devices', requireRoles('ADMIN', 'OWNER', 'PUSTAKAWAN'), notificationController.saveDevice);
+router.post('/devices/:id/check', requireRoles('ADMIN', 'OWNER', 'PUSTAKAWAN'), notificationController.checkDevice);
+router.post('/devices/:id/activate', requireRoles('ADMIN', 'OWNER', 'PUSTAKAWAN'), notificationController.activateDevice);
+router.delete('/devices/:id', requireRoles('ADMIN', 'OWNER', 'PUSTAKAWAN'), notificationController.deleteDevice);
+
 /* ---------------------------------------------------------------------------
  * API Information & System Status (Admin only)
  * Returns consolidated system status without exposing any credentials.

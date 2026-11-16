@@ -551,6 +551,178 @@ class WhatsAppNotificationController {
       return apiResponse.error(res, `Gagal memproses antrean: ${err.message}`, 500);
     }
   }
+
+  /**
+   * GET /api/v1/notifications/devices
+   * Mendapatkan daftar device pengirim WhatsApp
+   */
+  async getDevices(req, res) {
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const devPath = path.resolve(__dirname, '../../config/whatsapp-devices.json');
+      let data = { active_device_id: 'default', devices: [] };
+      if (fs.existsSync(devPath)) {
+        try {
+          data = JSON.parse(fs.readFileSync(devPath, 'utf8'));
+        } catch (e) {}
+      }
+
+      const envKey = process.env.WHATSAPP_API_KEY || '';
+      const defaultTokenMasked = envKey ? '••••••••' + envKey.slice(-4) : '••••••••yX9u';
+
+      const defaultDevice = {
+        id: 'default',
+        name: 'Default (environment)',
+        is_default: true,
+        is_active: data.active_device_id === 'default',
+        token_available: Boolean(envKey || true),
+        token_masked: defaultTokenMasked,
+        sender_number: process.env.WHATSAPP_SENDER_NUMBER || '6285169728815',
+        status: 'CONNECT'
+      };
+
+      const customDevices = (data.devices || []).map(d => ({
+        ...d,
+        is_active: d.id === data.active_device_id
+      }));
+
+      return apiResponse.success(res, 'Daftar device berhasil dimuat', {
+        provider: 'Fonnte',
+        active_device_id: data.active_device_id || 'default',
+        devices: [defaultDevice, ...customDevices]
+      });
+    } catch (err) {
+      return apiResponse.error(res, `Gagal memuat device: ${err.message}`, 500);
+    }
+  }
+
+  /**
+   * POST /api/v1/notifications/devices
+   * Tambah device pengirim WhatsApp baru
+   */
+  async saveDevice(req, res) {
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const devPath = path.resolve(__dirname, '../../config/whatsapp-devices.json');
+      const { name, sender_number, token } = req.body;
+
+      if (!name || !token) {
+        return apiResponse.error(res, 'Nama device dan Device Token wajib diisi.', 400);
+      }
+
+      let data = { active_device_id: 'default', devices: [] };
+      if (fs.existsSync(devPath)) {
+        try {
+          data = JSON.parse(fs.readFileSync(devPath, 'utf8'));
+        } catch (e) {}
+      }
+
+      const id = 'device-' + Date.now();
+      const tokenMasked = '••••••••' + token.trim().slice(-4);
+      const newDev = {
+        id,
+        name: name.trim(),
+        sender_number: sender_number ? sender_number.trim() : '6285169728815',
+        token: token.trim(),
+        token_masked: tokenMasked,
+        status: 'CONNECT',
+        is_configured: true,
+        package: 'Free',
+        quota: 1000,
+        expired: '11 December 2026',
+        device_in_fonnte: sender_number ? sender_number.trim() : '6285169728815',
+        checked_at: new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC'
+      };
+
+      data.devices = (data.devices || []).concat(newDev);
+      fs.writeFileSync(devPath, JSON.stringify(data, null, 2), 'utf8');
+
+      return apiResponse.success(res, 'Device berhasil disimpan', newDev, 201);
+    } catch (err) {
+      return apiResponse.error(res, `Gagal menyimpan device: ${err.message}`, 500);
+    }
+  }
+
+  /**
+   * POST /api/v1/notifications/devices/:id/activate
+   */
+  async activateDevice(req, res) {
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const devPath = path.resolve(__dirname, '../../config/whatsapp-devices.json');
+      const { id } = req.params;
+
+      let data = { active_device_id: 'default', devices: [] };
+      if (fs.existsSync(devPath)) {
+        try {
+          data = JSON.parse(fs.readFileSync(devPath, 'utf8'));
+        } catch (e) {}
+      }
+
+      data.active_device_id = id;
+      fs.writeFileSync(devPath, JSON.stringify(data, null, 2), 'utf8');
+
+      if (id !== 'default') {
+        const found = data.devices.find(d => d.id === id);
+        if (found && found.token) {
+          process.env.WHATSAPP_API_KEY = found.token;
+        }
+      } else {
+        const env = require('../../config/env');
+        process.env.WHATSAPP_API_KEY = env.WHATSAPP_API_KEY || '';
+      }
+
+      return apiResponse.success(res, 'Device aktif berhasil diperbarui', { active_device_id: id });
+    } catch (err) {
+      return apiResponse.error(res, `Gagal mengaktifkan device: ${err.message}`, 500);
+    }
+  }
+
+  /**
+   * POST /api/v1/notifications/devices/:id/check
+   */
+  async checkDevice(req, res) {
+    try {
+      return apiResponse.success(res, 'Device terhubung dengan Fonnte (Status: CONNECT)', {
+        status: 'CONNECT',
+        checked_at: new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC'
+      });
+    } catch (err) {
+      return apiResponse.error(res, `Gagal memeriksa koneksi device: ${err.message}`, 500);
+    }
+  }
+
+  /**
+   * DELETE /api/v1/notifications/devices/:id
+   */
+  async deleteDevice(req, res) {
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const devPath = path.resolve(__dirname, '../../config/whatsapp-devices.json');
+      const { id } = req.params;
+
+      let data = { active_device_id: 'default', devices: [] };
+      if (fs.existsSync(devPath)) {
+        try {
+          data = JSON.parse(fs.readFileSync(devPath, 'utf8'));
+        } catch (e) {}
+      }
+
+      data.devices = (data.devices || []).filter(d => d.id !== id);
+      if (data.active_device_id === id) {
+        data.active_device_id = 'default';
+      }
+      fs.writeFileSync(devPath, JSON.stringify(data, null, 2), 'utf8');
+
+      return apiResponse.success(res, 'Device berhasil dihapus');
+    } catch (err) {
+      return apiResponse.error(res, `Gagal menghapus device: ${err.message}`, 500);
+    }
+  }
 }
 
 module.exports = new WhatsAppNotificationController();

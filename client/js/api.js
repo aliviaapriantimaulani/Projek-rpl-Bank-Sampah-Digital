@@ -516,6 +516,64 @@ const API = {
     return this.request(`/notifications/history/${id}/read`, {
       method: 'PUT',
     });
+  },
+
+  // AI Configuration & Models Management
+  getAiConfig() {
+    return this.request('/ai/config');
+  },
+
+  updateAiConfig(payload) {
+    return this.request('/ai/config', {
+      method: 'PUT',
+      body: payload,
+    });
+  },
+
+  testAiModel(payload) {
+    return this.request('/ai/config/test', {
+      method: 'POST',
+      body: payload,
+    });
+  },
+
+  resetAiConfigToEnv() {
+    return this.request('/ai/config/reset-env', {
+      method: 'POST',
+      body: {},
+    });
+  },
+
+  // WhatsApp Gateway & Device Management
+  getWhatsAppDevices() {
+    return this.request('/notifications/devices');
+  },
+
+  saveWhatsAppDevice(payload) {
+    return this.request('/notifications/devices', {
+      method: 'POST',
+      body: payload,
+    });
+  },
+
+  checkWhatsAppDevice(id) {
+    return this.request(`/notifications/devices/${id}/check`, {
+      method: 'POST',
+      body: {},
+    });
+  },
+
+  activateWhatsAppDevice(id) {
+    return this.request(`/notifications/devices/${id}/activate`, {
+      method: 'POST',
+      body: {},
+    });
+  },
+
+  deleteWhatsAppDevice(id) {
+    return this.request(`/notifications/devices/${id}`, {
+      method: 'DELETE',
+    });
   }
 };
 

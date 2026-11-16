@@ -1,0 +1,20 @@
+{
+  "active_device_id": "device-2",
+  "devices": [
+    {
+      "id": "device-2",
+      "name": "device 2",
+      "sender_number": "6285169728815",
+      "token": "98XQabcdef1234567890abcdef123498XQ",
+      "token_masked": "••••••••98XQ",
+      "status": "CONNECT",
+      "is_configured": true,
+      "is_active": true,
+      "package": "Free",
+      "quota": 1000,
+      "expired": "11 December 2026",
+      "device_in_fonnte": "6285169728815",
+      "checked_at": "2026-11-16 16:58:16 UTC"
+    }
+  ]
+}

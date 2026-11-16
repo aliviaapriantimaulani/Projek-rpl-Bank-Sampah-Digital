@@ -48,16 +48,26 @@ optionalAuthRouter.post(
   aiController.askAssistant
 );
 
-// AI Config Management (Pustakawan only - untuk mengatur API key & model)
-optionalAuthRouter.put(
-  '/config',
-  requireRoles('PUSTAKAWAN'),
-  aiConfigController.updateConfig
-);
+// AI Config Management (Admin & Pustakawan - untuk mengatur API key & model)
 optionalAuthRouter.get(
   '/config',
-  requireRoles('PUSTAKAWAN'),
+  requireRoles('ADMIN', 'PUSTAKAWAN', 'OWNER'),
   aiConfigController.getConfig
+);
+optionalAuthRouter.put(
+  '/config',
+  requireRoles('ADMIN', 'PUSTAKAWAN', 'OWNER'),
+  aiConfigController.updateConfig
+);
+optionalAuthRouter.post(
+  '/config/test',
+  requireRoles('ADMIN', 'PUSTAKAWAN', 'OWNER'),
+  aiConfigController.testModel
+);
+optionalAuthRouter.post(
+  '/config/reset-env',
+  requireRoles('ADMIN', 'PUSTAKAWAN', 'OWNER'),
+  aiConfigController.resetToEnv
 );
 
 // Mount routers

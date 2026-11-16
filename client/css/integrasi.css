@@ -1,0 +1,350 @@
+/* ==============================================================================
+ * INTEGRASI & API KEY CONFIGURATION UI - DARK SLEEK THEME (Matches Image Spec)
+ * ============================================================================== */
+
+.integrasi-container {
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.integrasi-topbar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.integrasi-topbar-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.integrasi-topbar-title h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-color, #f8fafc);
+}
+
+.integrasi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .integrasi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Card Outer Wrapper */
+.integrasi-card {
+  background: #0d1527;
+  border: 1px solid #1e2d4a;
+  border-radius: 16px;
+  padding: 1.5rem;
+  color: #e2e8f0;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+.integrasi-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #1e2d4a;
+  padding-bottom: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.integrasi-card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #f1f5f9;
+}
+
+.integrasi-card-title .icon {
+  font-size: 1.25rem;
+}
+
+.integrasi-provider-badge {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  background: #162238;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid #223456;
+}
+
+/* Section Header */
+.integrasi-section-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #cbd5e1;
+  margin-bottom: 0.6rem;
+}
+
+/* Key Metadata Header */
+.integrasi-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  margin-bottom: 0.4rem;
+}
+
+.integrasi-badge-configured {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  font-weight: 700;
+  font-size: 0.72rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.integrasi-badge-unconfigured {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  font-weight: 700;
+  font-size: 0.72rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  text-transform: uppercase;
+}
+
+.integrasi-key-masked {
+  font-family: monospace;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #f8fafc;
+  letter-spacing: 0.05em;
+}
+
+.integrasi-source-text {
+  color: #94a3b8;
+  font-size: 0.8rem;
+}
+
+.integrasi-timestamp-text {
+  color: #64748b;
+  font-size: 0.78rem;
+  margin-bottom: 0.85rem;
+}
+
+/* Forms & Inputs */
+.integrasi-input-group {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.integrasi-input {
+  flex: 1;
+  min-width: 220px;
+  background: #070c17;
+  border: 1px solid #233554;
+  border-radius: 8px;
+  color: #f8fafc;
+  padding: 0.65rem 0.9rem;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.integrasi-input:focus {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+}
+
+.integrasi-btn-amber {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #0b0f19;
+  font-weight: 800;
+  font-size: 0.85rem;
+  border: none;
+  border-radius: 8px;
+  padding: 0.65rem 1.15rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: filter 0.2s, transform 0.1s;
+  white-space: nowrap;
+}
+
+.integrasi-btn-amber:hover {
+  filter: brightness(1.1);
+}
+
+.integrasi-btn-amber:active {
+  transform: scale(0.98);
+}
+
+.integrasi-btn-secondary {
+  background: #141e33;
+  color: #cbd5e1;
+  border: 1px solid #253654;
+  border-radius: 8px;
+  padding: 0.5rem 0.9rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.integrasi-btn-secondary:hover {
+  background: #1d2c4b;
+  border-color: #3b5078;
+  color: #fff;
+}
+
+.integrasi-btn-dark {
+  background: #162035;
+  color: #cbd5e1;
+  border: 1px solid #2a3c5d;
+  border-radius: 6px;
+  padding: 0.35rem 0.75rem;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 0.2s;
+}
+
+.integrasi-btn-dark:hover {
+  background: #233454;
+  color: #fff;
+}
+
+.integrasi-btn-activate {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #0f172a;
+  border: none;
+  border-radius: 6px;
+  padding: 0.35rem 0.85rem;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  transition: filter 0.2s;
+}
+
+.integrasi-btn-activate:hover {
+  filter: brightness(1.15);
+}
+
+.integrasi-desc-text {
+  font-size: 0.76rem;
+  color: #718096;
+  margin-top: 0.35rem;
+  line-height: 1.4;
+}
+
+/* Model & Device Cards */
+.integrasi-item-card {
+  background: #111a2e;
+  border: 1px solid #1f2f4c;
+  border-radius: 12px;
+  padding: 1rem 1.15rem;
+  margin-bottom: 0.85rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.integrasi-item-card.active-border {
+  border-color: #f59e0b;
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.15);
+}
+
+.integrasi-item-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.6rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.integrasi-item-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.integrasi-item-title {
+  font-weight: 800;
+  font-size: 1rem;
+  color: #f8fafc;
+}
+
+.integrasi-badge-active-green {
+  background: #059669;
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.integrasi-badge-compatible {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.integrasi-meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem 1rem;
+  font-size: 0.78rem;
+  color: #94a3b8;
+  margin-bottom: 0.6rem;
+}
+
+.integrasi-meta-grid strong {
+  color: #cbd5e1;
+}
+
+.integrasi-item-desc {
+  font-size: 0.78rem;
+  color: #718096;
+  line-height: 1.4;
+  border-top: 1px dashed #1e2d4a;
+  padding-top: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+/* Footnotes */
+.integrasi-footnote {
+  font-size: 0.74rem;
+  color: #64748b;
+  line-height: 1.45;
+  margin-top: 1.25rem;
+  border-top: 1px solid #1a253a;
+  padding-top: 0.85rem;
+}
