@@ -250,6 +250,14 @@ ${rbacFunctionCallingSection}
 
 ATURAN UTAMA:
 
+0. PRINSIP JAWABAN SINGKAT & TEPAT (SANGAT PENTING - WAJIB DIPATUHI):
+   - JIKA PENGGUNA BERTANYA "BERAPA" / "BRAPA" / "JUMLAH" / "TOTAL":
+     * WAJIB MENJAWAB DENGAN ANGKA / JUMLAH SAJA SECARA SINGKAT DAN PADAT.
+     * JANGAN MENYEBUTKAN SIAPA SAJA, DAFTAR RINCIAN, ATAU NAMA-NAMA ANGGOTA KECUALI JIKA PENGGUNA SECARA EKSPLISIT MEMINTA "SEBUTKAN", "APA SAJA", "SIAPA SAJA", ATAU "JELASKAN".
+     * Contoh: Jika ditanya "ada brapa role" atau "ada berapa role" -> JAWAB LANGSUNG: "Ada 4 role." (DILARANG menyebutkan nama-nama role Admin, Owner, Petugas, Nasabah!).
+     * Contoh: Jika ditanya "berapa user" -> Jawab jumlah angkanya saja.
+   - UNTUK SEMUA PERTANYAAN LAINNYA: Jawab tepat sasaran sesuai yang ditanyakan pengguna tanpa basa-basi salam panjang, tanpa ceramah yang tidak diminta, dan tanpa penjelasan bertele-tele.
+
 1. IDENTITAS & PERKENALAN:
    - Jika pengguna menanyakan identitas, nama, atau fungsi kamu (seperti "siapa kamu", "siapa anda", "nama kamu siapa", "perkenalkan dirimu", "halo", "kenalan", dll.), jawablah dengan kalimat berikut (boleh ditambah sapaan singkat sebelum/sesudahnya):
      "Saya adalah Asisten AI Cerdas Bank Sampah yang siap membantu kamu mengelola data sampah maupun menjawab pertanyaan seputar daur ulang!"
@@ -331,21 +339,39 @@ PANDUAN TAMBAHAN:
     const q = trimmedMsg.toLowerCase();
 
     // DETEKSI PERTANYAAN ROLE SISTEM (RBAC)
-    const rolePhrases = [
-      'ada berapa role', 'ada brapa role', 'berapa role', 'berapa peran',
-      'role apa saja', 'peran apa saja', 'daftar role', 'daftar peran',
-      'apa saja role', 'apa saja peran', 'role di sistem', 'role sistem',
-      'role yang ada', 'peran yang ada'
-    ];
-    if (rolePhrases.some(phrase => q.includes(phrase)) || q === 'role' || q === 'peran') {
+    // 1. Jika menanyakan "BERAPA / JUMLAH" -> Jawab angka saja tanpa menyebutkan siapa saja
+    const isCountRole = [
+      'ada berapa role', 'ada brapa role', 'berapa role', 'brapa role',
+      'berapa peran', 'brapa peran', 'jumlah role', 'jumlah peran',
+      'ada berapa peran', 'ada brapa peran', 'total role', 'total peran'
+    ].some(phrase => q.includes(phrase));
+
+    if (isCountRole) {
+      return {
+        reply: 'Ada **4** role.',
+        source: 'SYSTEM_ROLES',
+        authorized: true,
+        functionCall: null,
+        model: 'system-roles',
+      };
+    }
+
+    // 2. Jika menanyakan "APA SAJA / SIAPA SAJA / SEBUTKAN" -> Jawab daftar role
+    const isDetailRole = [
+      'role apa saja', 'peran apa saja', 'apa saja role', 'apa saja peran',
+      'siapa saja role', 'siapa aja role', 'daftar role', 'daftar peran',
+      'sebutkan role', 'sebutkan peran', 'jelaskan role', 'jelaskan peran',
+      'role sistem', 'role di sistem', 'role yang ada', 'peran yang ada'
+    ].some(phrase => q.includes(phrase)) || q === 'role' || q === 'peran';
+
+    if (isDetailRole) {
       return {
         reply:
-          `Sistem **Bank Sampah Digital** menerapkan sistem kendali akses berbasis peran (**RBAC**) dengan **4 Role Utama**:\n\n` +
-          `1. 👑 **Administrator (ADMIN)**: Akses penuh ke seluruh konfigurasi sistem, manajemen akun pengguna, audit log, integrasi AI, dan WhatsApp Gateway.\n` +
-          `2. 📊 **Owner / Pengelola (OWNER)**: Dasbor analitik eksekutif, analisis keuangan, approval penarikan saldo, kontrol stok gudang, dan laporan penjualan ke pengepul.\n` +
-          `3. ⚖️ **Petugas Timbang (PETUGAS)**: Operasional loket penimbangan sampah, input transaksi setoran nasabah, kasir penarikan tunai, dan pendaftaran nasabah.\n` +
-          `4. 👤 **Nasabah Warga (NASABAH)**: Dasbor personal, kartu digital & QR Code, buku tabungan sampah (saldo & mutasi), poin reward hijau, dan pengajuan penarikan saldo mandiri.\n\n` +
-          `*(Catatan: Terdapat juga peran **PUSTAKAWAN** yang memiliki hak akses khusus pada pengelolaan modul dan integrasi).*`,
+          `Sistem **Bank Sampah Digital** memiliki **4 Role Utama**:\n\n` +
+          `1. 👑 **Administrator (ADMIN)**: Akses penuh ke seluruh konfigurasi, audit log, manajemen user, dan integrasi.\n` +
+          `2. 📊 **Owner / Pengelola (OWNER)**: Dasbor analitik eksekutif, analisis keuangan, approval penarikan, dan stok gudang.\n` +
+          `3. ⚖️ **Petugas Timbang (PETUGAS)**: Operasional loket penimbangan sampah, pencatatan setoran, dan kasir tunai.\n` +
+          `4. 👤 **Nasabah Warga (NASABAH)**: Dasbor personal, kartu digital & QR, buku tabungan, dan reward.`,
         source: 'SYSTEM_ROLES',
         authorized: true,
         functionCall: null,

@@ -183,18 +183,42 @@ class AiAssistantService {
       };
     }
 
-    // 0B. Intent: Pertanyaan Peran / Role dalam Sistem ("ada berapa role", "role apa saja", "daftar peran", dll)
-    if (
+    // 0B. Intent: Pertanyaan Jumlah Role ("ada berapa role", "berapa role", "ada brapa role")
+    // ATURAN: Jawab angka saja secara langsung tanpa menyebutkan siapa saja / rincian
+    const isCountRoleQuery =
       q.includes('ada berapa role') ||
       q.includes('ada brapa role') ||
       q.includes('berapa role') ||
+      q.includes('brapa role') ||
       q.includes('berapa peran') ||
+      q.includes('brapa peran') ||
       q.includes('ada berapa peran') ||
       q.includes('ada brapa peran') ||
+      q.includes('jumlah role') ||
+      q.includes('jumlah peran') ||
+      q.includes('total role') ||
+      q.includes('total peran');
+
+    if (isCountRoleQuery) {
+      return {
+        query,
+        answer: 'Ada **4** role.',
+        authorized: true,
+        intent: 'SYSTEM_ROLES_COUNT',
+        source: 'SYSTEM_ROLES',
+        functionCall: null,
+        data: { totalRoles: 4 },
+      };
+    }
+
+    // 0C. Intent: Pertanyaan Daftar / Siapa Saja Role ("role apa saja", "sebutkan role", dll)
+    const isDetailRoleQuery =
       q.includes('role apa saja') ||
       q.includes('peran apa saja') ||
       q.includes('apa saja role') ||
       q.includes('apa saja peran') ||
+      q.includes('siapa saja role') ||
+      q.includes('siapa aja role') ||
       q.includes('daftar role') ||
       q.includes('daftar peran') ||
       q.includes('role apa aja') ||
@@ -209,28 +233,22 @@ class AiAssistantService {
       q.includes('jenis role') ||
       q.includes('hak akses role') ||
       q.includes('tingkatan role') ||
+      q.includes('jelaskan role') ||
+      q.includes('jelaskan peran') ||
       q === 'role' ||
-      q === 'peran'
-    ) {
+      q === 'peran';
+
+    if (isDetailRoleQuery) {
       return {
         query,
         answer:
-          `Sistem **Bank Sampah Digital** menerapkan sistem kendali akses berbasis peran (**Role-Based Access Control / RBAC**) yang terdiri dari **4 Role Utama** (dan 1 role konfigurasi):\n\n` +
-          `1. 👑 **Administrator (ADMIN)**\n` +
-          `   - **Hak Akses**: Hak akses penuh (superadmin) ke seluruh modul dan konfigurasi sistem.\n` +
-          `   - **Tanggung Jawab**: Manajemen data pengguna (user management), audit log aktivitas, monitoring notifikasi WhatsApp, serta pengaturan model & API Key AI.\n\n` +
-          `2. 📊 **Owner / Pengelola (OWNER)**\n` +
-          `   - **Hak Akses**: Dasbor analitik eksekutif dan keuangan operasional.\n` +
-          `   - **Tanggung Jawab**: Memantau tren transaksi, perputaran kas/rupiah, persetujuan (*approval*) penarikan saldo nasabah, monitoring inventaris stok gudang, dan laporan penjualan ke pengepul.\n\n` +
-          `3. ⚖️ **Petugas Timbang / Teller (PETUGAS)**\n` +
-          `   - **Hak Akses**: Dasbor operasional lapangan dan loket timbangan.\n` +
-          `   - **Tanggung Jawab**: Pendaftaran nasabah baru, penimbangan sampah nasabah, pencatatan transaksi setoran, dan melayani pencairan tunai di loket.\n\n` +
-          `4. 👤 **Nasabah / Warga (NASABAH)**\n` +
-          `   - **Hak Akses**: Dasbor personal nasabah warga.\n` +
-          `   - **Fitur & Layanan**: Kartu anggota digital dengan QR Code, buku tabungan sampah digital (cek saldo & riwayat setoran), poin reward hijau, dan pengajuan penarikan saldo secara mandiri.\n\n` +
-          `*(Catatan: Terdapat juga peran **PUSTAKAWAN** yang memiliki hak akses khusus pada pengelolaan data modul dan integrasi).*`,
+          `Sistem **Bank Sampah Digital** memiliki **4 Role Utama**:\n\n` +
+          `1. 👑 **Administrator (ADMIN)**: Akses penuh ke seluruh konfigurasi, audit log, manajemen pengguna, dan integrasi.\n` +
+          `2. 📊 **Owner / Pengelola (OWNER)**: Dasbor analitik, laporan keuangan, approval penarikan saldo, dan stok gudang.\n` +
+          `3. ⚖️ **Petugas Timbang (PETUGAS)**: Operasional loket penimbangan, pencatatan setoran, dan kasir tunai.\n` +
+          `4. 👤 **Nasabah / Warga (NASABAH)**: Dasbor warga, kartu anggota digital (QR Code), buku tabungan, dan penukaran reward.`,
         authorized: true,
-        intent: 'SYSTEM_ROLES',
+        intent: 'SYSTEM_ROLES_DETAIL',
         source: 'SYSTEM_ROLES',
         functionCall: null,
         data: {
@@ -1036,6 +1054,43 @@ class AiAssistantService {
         db('waste_sales').where('sale_date', '>=', startOfMonth).count('id as c').first(),
         db('customers').where('created_at', '>=', startOfMonth).count('id as c').first()
       ]);
+
+      // Jawab spesifik dan langsung dengan angka jika pertanyaan menanyakan kuantitas ("berapa / jumlah")
+      if (q.includes('berapa user') || q.includes('brapa user') || q.includes('jumlah user') || q.includes('ada berapa user') || q.includes('ada brapa user') || q.includes('total user') || q.includes('berapa pengguna') || q.includes('jumlah pengguna')) {
+        return {
+          query,
+          answer: `Ada **${totalUsers.c}** pengguna terdaftar.`,
+          authorized: true,
+          intent: 'USERS_COUNT',
+          source: 'DATABASE_TOOL',
+          functionCall: { tool: 'get_users_statistics', data: { totalUsers: parseInt(totalUsers.c, 10) } },
+          data: { totalUsers: parseInt(totalUsers.c, 10) },
+        };
+      }
+
+      if (q.includes('berapa nasabah') || q.includes('brapa nasabah') || q.includes('jumlah nasabah') || q.includes('ada berapa nasabah') || q.includes('ada brapa nasabah') || q.includes('total nasabah')) {
+        return {
+          query,
+          answer: `Ada **${totalCustomers.c}** nasabah terdaftar (Aktif: **${activeCustomers.c}**).`,
+          authorized: true,
+          intent: 'CUSTOMERS_COUNT',
+          source: 'DATABASE_TOOL',
+          functionCall: { tool: 'get_customers_statistics', data: { total: parseInt(totalCustomers.c, 10), active: parseInt(activeCustomers.c, 10) } },
+          data: { total: parseInt(totalCustomers.c, 10), active: parseInt(activeCustomers.c, 10) },
+        };
+      }
+
+      if (q.includes('berapa transaksi') || q.includes('brapa transaksi') || q.includes('jumlah transaksi') || q.includes('ada berapa transaksi') || q.includes('ada brapa transaksi') || q.includes('total transaksi')) {
+        return {
+          query,
+          answer: `Ada **${totalDeposits.c}** total transaksi setoran.`,
+          authorized: true,
+          intent: 'TRANSACTIONS_COUNT',
+          source: 'DATABASE_TOOL',
+          functionCall: { tool: 'get_transactions_statistics', data: { total: parseInt(totalDeposits.c, 10) } },
+          data: { total: parseInt(totalDeposits.c, 10) },
+        };
+      }
 
       return {
         query,
