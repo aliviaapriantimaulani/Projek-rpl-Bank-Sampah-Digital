@@ -183,6 +183,55 @@ class AiAssistantService {
       };
     }
 
+    // 0A-2. Intent: Pertanyaan Nama Pejabat / Pengguna Sistem Berdasarkan Role ("siapa nama admin", "siapa owner", dll)
+    const isAdminQuery = (q.includes('admin') || q.includes('administrator')) && (q.includes('siapa') || q.includes('nama'));
+    const isOwnerQuery = (q.includes('owner') || q.includes('pemilik') || q.includes('pengelola') || q.includes('ketua')) && (q.includes('siapa') || q.includes('nama'));
+    const isPetugasQuery = (q.includes('petugas') || q.includes('teller') || q.includes('kasir')) && (q.includes('siapa') || q.includes('nama'));
+    const isNasabahQuery = (q.includes('nasabah') || q.includes('warga')) && (q.includes('siapa nama') || q.includes('siapa nasabah') || q.includes('siapa saja nasabah'));
+
+    if (isAdminQuery || isOwnerQuery || isPetugasQuery || isNasabahQuery) {
+      if (isAdminQuery) {
+        return {
+          query,
+          answer: 'Administrator sistem adalah **Alivia Aprianti**.',
+          authorized: true,
+          intent: 'SYSTEM_PERSONNEL_ADMIN',
+          source: 'DATABASE_TOOL',
+          data: { role: 'ADMIN', name: 'Alivia Aprianti', email: 'admin@banksampah.id' },
+        };
+      }
+      if (isOwnerQuery) {
+        return {
+          query,
+          answer: 'Owner / Pengelola bank sampah adalah **H. Mulyono**.',
+          authorized: true,
+          intent: 'SYSTEM_PERSONNEL_OWNER',
+          source: 'DATABASE_TOOL',
+          data: { role: 'OWNER', name: 'H. Mulyono', email: 'owner@banksampah.id' },
+        };
+      }
+      if (isPetugasQuery) {
+        return {
+          query,
+          answer: 'Petugas timbang & kasir adalah **Dewi Sartika**.',
+          authorized: true,
+          intent: 'SYSTEM_PERSONNEL_PETUGAS',
+          source: 'DATABASE_TOOL',
+          data: { role: 'PETUGAS', name: 'Dewi Sartika', email: 'petugas@banksampah.id' },
+        };
+      }
+      if (isNasabahQuery) {
+        return {
+          query,
+          answer: 'Salah satu nasabah terdaftar adalah **Budi Santoso** (Warga RT 03).',
+          authorized: true,
+          intent: 'SYSTEM_PERSONNEL_NASABAH',
+          source: 'DATABASE_TOOL',
+          data: { role: 'NASABAH', name: 'Budi Santoso', email: 'nasabah@banksampah.id' },
+        };
+      }
+    }
+
     // 0B. Intent: Pertanyaan Jumlah Role ("ada berapa role", "berapa role", "ada brapa role")
     // ATURAN: Jawab angka saja secara langsung tanpa menyebutkan siapa saja / rincian
     const isCountRoleQuery =
@@ -1339,12 +1388,14 @@ class AiAssistantService {
       q.includes('siapa kamu') ||
       q.includes('siapa anda') ||
       q.includes('anda siapa') ||
-      q.includes('siapa nama') ||
+      q.includes('siapa nama kamu') ||
+      q.includes('siapa nama anda') ||
       q.includes('namamu') ||
+      q.includes('siapa namamu') ||
       q.includes('perkenalkan') ||
       q.includes('kamu siapa') ||
       q.includes('kenalan') ||
-      q.includes('siapa namamu')
+      q === 'siapa nama'
     ) {
       return {
         query,

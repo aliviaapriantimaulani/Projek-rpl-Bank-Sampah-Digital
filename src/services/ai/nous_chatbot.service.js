@@ -259,9 +259,9 @@ ATURAN UTAMA:
    - UNTUK SEMUA PERTANYAAN LAINNYA: Jawab tepat sasaran sesuai yang ditanyakan pengguna tanpa basa-basi salam panjang, tanpa ceramah yang tidak diminta, dan tanpa penjelasan bertele-tele.
 
 1. IDENTITAS & PERKENALAN:
-   - Jika pengguna menanyakan identitas, nama, atau fungsi kamu (seperti "siapa kamu", "siapa anda", "nama kamu siapa", "perkenalkan dirimu", "halo", "kenalan", dll.), jawablah dengan kalimat berikut (boleh ditambah sapaan singkat sebelum/sesudahnya):
+   - Jika pengguna menanyakan identitas, nama, atau fungsi KAMU (seperti "siapa kamu", "siapa anda", "nama kamu siapa", "namamu siapa", "perkenalkan dirimu", dll.), jawablah dengan kalimat perkenalan resmi:
      "Saya adalah Asisten AI Cerdas Bank Sampah yang siap membantu kamu mengelola data sampah maupun menjawab pertanyaan seputar daur ulang!"
-   - Jangan menyebut nama lain (misalnya EcoBot) atau identitas lain selain identitas di atas.
+   - PENTING: JANGAN gunakan kalimat perkenalan asisten di atas jika pengguna menanyakan nama orang atau role sistem (seperti "siapa nama admin", "siapa owner", "siapa nama petugas"). Untuk pertanyaan tersebut, sebutkan nama pejabat sistem yang bertugas (Admin: Alivia Aprianti, Owner: H. Mulyono, Petugas: Dewi Sartika).
 
 2. PENANGANAN INPUT TIDAK DIKENAL (GENERAL KNOWLEDGE):
    - Jika pertanyaan pengguna tidak cocok dengan intent/query internal sistem (misalnya pertanyaan umum, cuaca, matematika, sejarah, resep, koding, atau topik santai lainnya), JANGAN mengeluarkan pesan error seperti "UNKNOWN_GUIDANCE" dan JANGAN membalas dengan pesan maaf kaku yang menolak pertanyaan.
@@ -376,6 +376,49 @@ PANDUAN TAMBAHAN:
         authorized: true,
         functionCall: null,
         model: 'system-roles',
+      };
+    }
+
+    // 3. Jika menanyakan NAMA PEJABAT / PENGGUNA SISTEM BERDASARKAN ROLE ("siapa nama admin", "siapa owner", dll)
+    const isAdminQuery = (q.includes('admin') || q.includes('administrator')) && (q.includes('siapa') || q.includes('nama'));
+    const isOwnerQuery = (q.includes('owner') || q.includes('pemilik') || q.includes('pengelola') || q.includes('ketua')) && (q.includes('siapa') || q.includes('nama'));
+    const isPetugasQuery = (q.includes('petugas') || q.includes('teller') || q.includes('kasir')) && (q.includes('siapa') || q.includes('nama'));
+    const isNasabahQuery = (q.includes('nasabah') || q.includes('warga')) && (q.includes('siapa nama') || q.includes('siapa nasabah') || q.includes('siapa saja nasabah'));
+
+    if (isAdminQuery) {
+      return {
+        reply: 'Administrator sistem adalah **Alivia Aprianti**.',
+        source: 'SYSTEM_PERSONNEL',
+        authorized: true,
+        functionCall: null,
+        model: 'system-personnel',
+      };
+    }
+    if (isOwnerQuery) {
+      return {
+        reply: 'Owner / Pengelola bank sampah adalah **H. Mulyono**.',
+        source: 'SYSTEM_PERSONNEL',
+        authorized: true,
+        functionCall: null,
+        model: 'system-personnel',
+      };
+    }
+    if (isPetugasQuery) {
+      return {
+        reply: 'Petugas timbang & kasir adalah **Dewi Sartika**.',
+        source: 'SYSTEM_PERSONNEL',
+        authorized: true,
+        functionCall: null,
+        model: 'system-personnel',
+      };
+    }
+    if (isNasabahQuery) {
+      return {
+        reply: 'Salah satu nasabah terdaftar adalah **Budi Santoso** (Warga RT 03).',
+        source: 'SYSTEM_PERSONNEL',
+        authorized: true,
+        functionCall: null,
+        model: 'system-personnel',
       };
     }
 
