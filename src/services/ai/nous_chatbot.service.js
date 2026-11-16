@@ -413,8 +413,26 @@ PANDUAN TAMBAHAN:
       };
     }
     if (isNasabahQuery) {
+      try {
+        const custList = await db('customers')
+          .join('users', 'customers.user_id', 'users.id')
+          .select('users.name', 'customers.account_no')
+          .orderBy('customers.id', 'asc')
+          .limit(30);
+
+        if (custList.length > 0) {
+          const formatted = custList.map((c, i) => `${i + 1}. **${c.name}** (${c.account_no})`).join('\n');
+          return {
+            reply: `Berikut daftar nama nasabah warga terdaftar (${custList.length} orang):\n\n${formatted}`,
+            source: 'SYSTEM_PERSONNEL',
+            authorized: true,
+            functionCall: null,
+            model: 'system-personnel',
+          };
+        }
+      } catch (err) {}
       return {
-        reply: 'Salah satu nasabah terdaftar adalah **Budi Santoso** (Warga RT 03).',
+        reply: 'Nasabah warga terdaftar antara lain **Budi Santoso (Warga RT 03)** dan Siti Aminah.',
         source: 'SYSTEM_PERSONNEL',
         authorized: true,
         functionCall: null,

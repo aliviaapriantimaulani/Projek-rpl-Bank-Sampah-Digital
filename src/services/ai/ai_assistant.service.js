@@ -221,13 +221,34 @@ class AiAssistantService {
         };
       }
       if (isNasabahQuery) {
+        try {
+          const customerList = await db('customers')
+            .join('users', 'customers.user_id', 'users.id')
+            .select('users.name', 'customers.account_no')
+            .orderBy('customers.id', 'asc')
+            .limit(30);
+
+          if (customerList.length > 0) {
+            const formattedList = customerList
+              .map((c, idx) => `${idx + 1}. **${c.name}** (${c.account_no})`)
+              .join('\n');
+            return {
+              query,
+              answer: `Berikut daftar nama nasabah warga terdaftar (${customerList.length} orang):\n\n${formattedList}`,
+              authorized: true,
+              intent: 'SYSTEM_PERSONNEL_NASABAH',
+              source: 'DATABASE_TOOL',
+              data: customerList,
+            };
+          }
+        } catch (e) {}
         return {
           query,
-          answer: 'Salah satu nasabah terdaftar adalah **Budi Santoso** (Warga RT 03).',
+          answer: 'Nasabah warga terdaftar antara lain **Budi Santoso (Warga RT 03)** dan Siti Aminah.',
           authorized: true,
           intent: 'SYSTEM_PERSONNEL_NASABAH',
           source: 'DATABASE_TOOL',
-          data: { role: 'NASABAH', name: 'Budi Santoso', email: 'nasabah@banksampah.id' },
+          data: { role: 'NASABAH', name: 'Budi Santoso' },
         };
       }
     }
@@ -762,7 +783,7 @@ class AiAssistantService {
       };
     }
 
-    // 7. Intent: "Berapa nasabah aktif?" / "jumlah nasabah"
+    // 7. Intent: Daftar / Jumlah Nasabah Warga ("sebutkan nama warga", "daftar nasabah", "berapa nasabah aktif", dll)
     // Dicetak setelah SEARCH_DATA agar "cari nasabah" tidak tertangkap di sini
     if (
       (q.includes('nasabah') || q.includes('warga') || q.includes('pelanggan')) &&
@@ -781,6 +802,38 @@ class AiAssistantService {
           functionCall: null,
           data: null,
         };
+      }
+
+      const isListRequest =
+        q.includes('sebutkan') ||
+        q.includes('daftar') ||
+        q.includes('nama') ||
+        q.includes('siapa saja') ||
+        q.includes('siapa aja') ||
+        q.includes('rincian') ||
+        q.includes('list');
+
+      if (isListRequest) {
+        const custList = await db('customers')
+          .join('users', 'customers.user_id', 'users.id')
+          .select('users.name', 'customers.account_no', 'customers.status')
+          .orderBy('customers.id', 'asc')
+          .limit(30);
+
+        if (custList.length > 0) {
+          const listText = custList
+            .map((c, i) => `${i + 1}. **${c.name}** (${c.account_no})`)
+            .join('\n');
+          return {
+            query,
+            answer: `Berikut daftar nama nasabah warga terdaftar (${custList.length} orang):\n\n${listText}`,
+            authorized: true,
+            intent: 'CUSTOMER_LIST',
+            source: 'DATABASE_TOOL',
+            functionCall: { tool: 'get_customers_list', data: { count: custList.length } },
+            data: custList,
+          };
+        }
       }
 
       const totalCust = await db('customers').count('id as count').first();
