@@ -1769,10 +1769,7 @@ function handleAiModelChange(model) {
     'gemini': 'Google Gemini 1.5 Pro',
     'grok': 'xAI Grok 2',
   };
-  showToast(`Model AI aktif diubah ke: ${modelLabels[normalized] || normalized}`, 'success');
-    'deepseek-r1': 'DeepSeek R1',
-  };
-  const modelName = modelLabels[model] || model;
+  const modelName = modelLabels[normalized] || normalized;
   showToast(`🤖 Model AI aktif diubah ke: ${modelName}`, 'success');
 }
 
