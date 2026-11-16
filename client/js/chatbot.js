@@ -280,15 +280,15 @@ const Chatbot = {
       }
 
       const modelLabels = {
-        'gpt-4o': 'GPT-4o',
-        'claude-3-5-sonnet': 'Claude 3.5 Sonnet',
-        'gemini-1-5-pro': 'Gemini 1.5 Pro',
-        'deepseek-r1': 'DeepSeek R1',
+        'gemini': 'Google Gemini 1.5 Pro',
+        'google/gemini-1.5-pro': 'Google Gemini 1.5 Pro',
+        'grok': 'xAI Grok 2',
+        'xai/grok-2': 'xAI Grok 2',
       };
       const activeModelKey = (typeof State !== 'undefined' && State.getAiModel)
         ? State.getAiModel()
-        : (localStorage.getItem('bs_ai_model') || 'gpt-4o');
-      const fallbackModelName = modelLabels[activeModelKey] || activeModelKey;
+        : (localStorage.getItem('bs_ai_model') || 'gemini');
+      const fallbackModelName = modelLabels[activeModelKey] || (activeModelKey.toLowerCase().includes('grok') ? 'xAI Grok 2' : 'Google Gemini 1.5 Pro');
       const modelName = payload && payload.model ? String(payload.model) : fallbackModelName;
       this.appendBotMessage(String(reply), modelName, {
         source: payload && payload.source,

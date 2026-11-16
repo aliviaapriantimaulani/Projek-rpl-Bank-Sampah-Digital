@@ -6,7 +6,7 @@ const State = {
   user: null,
   token: null,
   activeRoute: '',
-  activeAiModel: 'gpt-4o', // Default: GPT-4o
+  activeAiModel: 'gemini', // Default: Google Gemini 1.5 Pro
 
   // Quick Demo Accounts for Local Testing
   DEMO_ACCOUNTS: [
@@ -51,11 +51,11 @@ const State = {
   },
 
   getAiModel() {
-    return localStorage.getItem('bs_ai_model') || 'gpt-4o';
+    return localStorage.getItem('bs_ai_model') || 'gemini';
   },
 
   setAiModel(model) {
-    this.activeAiModel = model || 'gpt-4o';
+    this.activeAiModel = model || 'gemini';
     localStorage.setItem('bs_ai_model', this.activeAiModel);
   },
 

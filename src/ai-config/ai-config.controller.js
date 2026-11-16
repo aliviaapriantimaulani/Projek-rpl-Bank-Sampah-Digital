@@ -5,40 +5,22 @@ const aiConfigPath = path.resolve(__dirname, '../config/ai-config.json');
 
 const DEFAULT_MODELS = [
   {
-    id: 'mistralai/mistral-small-2603',
-    name: 'Mistral Small 4',
-    context: '256,000 token',
-    description: 'Model utama yang sudah diuji dengan API Key environment.',
-    is_compatible: true,
-    last_tested: '2026-11-16 04:10:53 UTC',
-    response_time: '996 ms'
-  },
-  {
-    id: 'cohere/command-a-plus',
-    name: 'Command A+',
-    context: '436,000 token',
-    description: 'Model alternatif yang sudah diuji dengan API Key environment.',
+    id: 'google/gemini-1.5-pro',
+    name: 'Google Gemini 1.5 Pro',
+    context: '1,000,000 token',
+    description: 'Model multimodal unggulan Google dengan penalaran tinggi dan konteks ultra-panjang.',
     is_compatible: true,
     last_tested: '2026-11-16 15:26:02 UTC',
-    response_time: '1225 ms'
-  },
-  {
-    id: 'meituan/longcat-2.5-preview:free',
-    name: 'Nous LongCat 2.5',
-    context: '256,000 token',
-    description: 'Model gratis Nous Research dengan penalaran konteks panjang.',
-    is_compatible: true,
-    last_tested: '2026-11-16 12:00:00 UTC',
-    response_time: '950 ms'
-  },
-  {
-    id: 'stepfun/step-3.7-flash:free',
-    name: 'StepFun Flash 3.7',
-    context: '128,000 token',
-    description: 'Model cepat latensi rendah untuk chatbot percakapan interaktif.',
-    is_compatible: true,
-    last_tested: '2026-11-16 10:15:30 UTC',
     response_time: '890 ms'
+  },
+  {
+    id: 'xai/grok-2',
+    name: 'xAI Grok 2',
+    context: '131,072 token',
+    description: 'Model cerdas dan responsif dari xAI dengan pemahaman data dan instruksi cepat.',
+    is_compatible: true,
+    last_tested: '2026-11-16 15:26:02 UTC',
+    response_time: '940 ms'
   }
 ];
 
@@ -74,7 +56,7 @@ async function getConfig(req, res) {
 
     const envKey = process.env.NOUS_API_KEY || '';
     const activeKey = hasCustomKey ? config.api_key : envKey;
-    const activeModel = config.model || process.env.NOUS_MODEL || 'mistralai/mistral-small-2603';
+    const activeModel = config.model || process.env.NOUS_MODEL || 'google/gemini-1.5-pro';
 
     const models = DEFAULT_MODELS.map(m => ({
       ...m,
@@ -157,7 +139,7 @@ async function updateConfig(req, res) {
     } catch (e) {}
 
     const updatedKey = config.api_key || process.env.NOUS_API_KEY || '';
-    const updatedModel = config.model || process.env.NOUS_MODEL || 'mistralai/mistral-small-2603';
+    const updatedModel = config.model || process.env.NOUS_MODEL || 'google/gemini-1.5-pro';
 
     return res.json({
       success: true,
@@ -186,7 +168,7 @@ async function updateConfig(req, res) {
 async function testModel(req, res) {
   try {
     const { model, api_key } = req.body;
-    const testModelId = model || process.env.NOUS_MODEL || 'mistralai/mistral-small-2603';
+    const testModelId = model || process.env.NOUS_MODEL || 'google/gemini-1.5-pro';
     const startTime = Date.now();
 
     // Simulasi atau eksekusi tes koneksi model

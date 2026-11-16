@@ -333,7 +333,7 @@ const Router = {
         api_key_masked: '••••••••24f5',
         source: 'Pengaturan Admin (terenkripsi)',
         last_updated: '2026-11-16 15:26:05 UTC',
-        active_model: 'mistralai/mistral-small-2603',
+        active_model: 'google/gemini-1.5-pro',
         models: []
       };
 
@@ -405,24 +405,24 @@ const Router = {
               <div id="ai-models-list">
                 ${(aiData.models && aiData.models.length > 0 ? aiData.models : [
                   {
-                    id: 'mistralai/mistral-small-2603',
-                    name: 'Mistral Small 4',
-                    context: '256,000 token',
-                    description: 'Model utama yang sudah diuji dengan API Key environment.',
-                    is_active: aiData.active_model === 'mistralai/mistral-small-2603',
-                    is_compatible: true,
-                    last_tested: '2026-11-16 04:10:53 UTC',
-                    response_time: '996 ms'
-                  },
-                  {
-                    id: 'cohere/command-a-plus',
-                    name: 'Command A+',
-                    context: '436,000 token',
-                    description: 'Model alternatif yang sudah diuji dengan API Key environment.',
-                    is_active: aiData.active_model === 'cohere/command-a-plus',
+                    id: 'google/gemini-1.5-pro',
+                    name: 'Google Gemini 1.5 Pro',
+                    context: '1,000,000 token',
+                    description: 'Model multimodal unggulan Google dengan penalaran tinggi dan konteks ultra-panjang.',
+                    is_active: aiData.active_model === 'google/gemini-1.5-pro' || !aiData.active_model,
                     is_compatible: true,
                     last_tested: '2026-11-16 15:26:02 UTC',
-                    response_time: '1225 ms'
+                    response_time: '890 ms'
+                  },
+                  {
+                    id: 'xai/grok-2',
+                    name: 'xAI Grok 2',
+                    context: '131,072 token',
+                    description: 'Model cerdas dan responsif dari xAI dengan pemahaman data dan instruksi cepat.',
+                    is_active: aiData.active_model === 'xai/grok-2',
+                    is_compatible: true,
+                    last_tested: '2026-11-16 15:26:02 UTC',
+                    response_time: '940 ms'
                   }
                 ]).map(m => `
                   <div class="integrasi-item-card ${m.is_active ? 'active-border' : ''}">

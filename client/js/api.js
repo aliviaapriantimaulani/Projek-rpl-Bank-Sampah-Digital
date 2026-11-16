@@ -342,7 +342,7 @@ const API = {
   askAiAssistant(question, history = [], options = {}) {
     const model = (typeof State !== 'undefined' && State.getAiModel)
       ? State.getAiModel()
-      : (localStorage.getItem('bs_ai_model') || 'gpt-4o');
+      : (localStorage.getItem('bs_ai_model') || 'gemini');
     const user = (typeof State !== 'undefined' && State.user)
       ? State.user
       : this.getUser();
@@ -373,7 +373,7 @@ const API = {
   sendChatMessage(message, history = [], options = {}) {
     const model = (typeof State !== 'undefined' && State.getAiModel)
       ? State.getAiModel()
-      : (localStorage.getItem('bs_ai_model') || 'gpt-4o');
+      : (localStorage.getItem('bs_ai_model') || 'gemini');
     const user = (typeof State !== 'undefined' && State.user)
       ? State.user
       : this.getUser();

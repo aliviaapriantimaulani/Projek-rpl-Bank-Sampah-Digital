@@ -1710,12 +1710,14 @@ function updateAiModelBadge(model) {
   if (!badge) return;
 
   const modelLabels = {
-    'gpt-4o': 'GPT-4o',
-    'claude-3-5-sonnet': 'Claude 3.5',
-    'gemini-1-5-pro': 'Gemini 1.5',
-    'deepseek-r1': 'DeepSeek R1',
+    'gemini': 'Gemini',
+    'google/gemini-1.5-pro': 'Gemini',
+    'gemini-1-5-pro': 'Gemini',
+    'grok': 'Grok',
+    'xai/grok-2': 'Grok',
+    'grok-2': 'Grok'
   };
-  badge.textContent = modelLabels[model] || model;
+  badge.textContent = modelLabels[model] || (String(model).toLowerCase().includes('grok') ? 'Grok' : 'Gemini');
 }
 
 function initAiModelSwitcher() {
@@ -1730,9 +1732,11 @@ function initAiModelSwitcher() {
 
   if (!isAdmin) return; // Non-admin: no further initialization needed
 
-  const savedModel = (typeof State !== 'undefined' && State.getAiModel)
+  const rawSaved = (typeof State !== 'undefined' && State.getAiModel)
     ? State.getAiModel()
-    : (localStorage.getItem('bs_ai_model') || 'gpt-4o');
+    : (localStorage.getItem('bs_ai_model') || 'gemini');
+
+  const savedModel = String(rawSaved).toLowerCase().includes('grok') ? 'grok' : 'gemini';
 
   if (select) {
     select.value = savedModel;
@@ -1747,22 +1751,25 @@ function handleAiModelChange(model) {
     showToast('⛔ Hanya Admin yang dapat mengubah model AI.', 'error');
     // Reset to default
     const select = document.getElementById('ai-model-select');
-    if (select) select.value = 'gpt-4o';
+    if (select) select.value = 'gemini';
     return;
   }
 
+  const normalized = model.toLowerCase().includes('grok') ? 'grok' : 'gemini';
+
   if (typeof State !== 'undefined' && State.setAiModel) {
-    State.setAiModel(model);
+    State.setAiModel(normalized);
   } else {
-    localStorage.setItem('bs_ai_model', model);
+    localStorage.setItem('bs_ai_model', normalized);
   }
 
-  updateAiModelBadge(model);
+  updateAiModelBadge(normalized);
 
   const modelLabels = {
-    'gpt-4o': 'GPT-4o',
-    'claude-3-5-sonnet': 'Claude 3.5 Sonnet',
-    'gemini-1-5-pro': 'Gemini 1.5 Pro',
+    'gemini': 'Google Gemini 1.5 Pro',
+    'grok': 'xAI Grok 2',
+  };
+  showToast(`Model AI aktif diubah ke: ${modelLabels[normalized] || normalized}`, 'success');
     'deepseek-r1': 'DeepSeek R1',
   };
   const modelName = modelLabels[model] || model;
