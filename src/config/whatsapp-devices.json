@@ -1,5 +1,5 @@
 {
-  "active_device_id": "device-2",
+  "active_device_id": "device-1794850480532",
   "devices": [
     {
       "id": "device-2",
@@ -15,6 +15,20 @@
       "expired": "11 December 2026",
       "device_in_fonnte": "6285169728815",
       "checked_at": "2026-11-16 16:58:16 UTC"
+    },
+    {
+      "id": "device-1794850480532",
+      "name": "VIa",
+      "sender_number": "Alivia@gmail.com",
+      "token": "12345678",
+      "token_masked": "••••••••5678",
+      "status": "CONNECT",
+      "is_configured": true,
+      "package": "Free",
+      "quota": 1000,
+      "expired": "11 December 2026",
+      "device_in_fonnte": "Alivia@gmail.com",
+      "checked_at": "2026-11-16 17:34:40 UTC"
     }
   ]
 }

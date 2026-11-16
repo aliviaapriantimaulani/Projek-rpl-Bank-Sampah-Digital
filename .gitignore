@@ -48,4 +48,5 @@ _tmp_*.py
 replace_func*.js
 replace_func*.py
 replace_admin.py
+src/config/ai-config.local.json
 FINAL_TEST_REPORT*.md

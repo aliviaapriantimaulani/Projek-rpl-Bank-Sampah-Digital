@@ -4,7 +4,7 @@
   "base_url": "https://inference-api.nousresearch.com/v1",
   "key_id": "",
   "timeout_ms": 20000,
-  "fallback_models": [
+  "available_models": [
     "google/gemini-1.5-pro",
     "xai/grok-2"
   ],

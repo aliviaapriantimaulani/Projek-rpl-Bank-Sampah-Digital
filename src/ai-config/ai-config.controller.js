@@ -1,7 +1,13 @@
 const fs = require('fs');
 const path = require('path');
 
-const aiConfigPath = path.resolve(__dirname, '../config/ai-config.json');
+const localConfigPath = path.resolve(__dirname, '../config/ai-config.local.json');
+const baseConfigPath = path.resolve(__dirname, '../config/ai-config.json');
+
+function getResolvedConfigPath() {
+  if (fs.existsSync(localConfigPath)) return localConfigPath;
+  return baseConfigPath;
+}
 
 const DEFAULT_MODELS = [
   {
@@ -42,15 +48,16 @@ async function getConfig(req, res) {
     let fileStat = null;
     let hasCustomKey = false;
 
-    if (fs.existsSync(aiConfigPath)) {
+    const configPath = getResolvedConfigPath();
+    if (fs.existsSync(configPath)) {
       try {
-        config = JSON.parse(fs.readFileSync(aiConfigPath, 'utf8'));
-        fileStat = fs.statSync(aiConfigPath);
+        config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        fileStat = fs.statSync(configPath);
         if (config.api_key && config.api_key.trim().length > 0) {
           hasCustomKey = true;
         }
       } catch (e) {
-        console.warn('[AiConfig] Error parsing ai-config.json:', e.message);
+        console.warn('[AiConfig] Error parsing ai config file:', e.message);
       }
     }
 
@@ -128,7 +135,14 @@ async function updateConfig(req, res) {
 
     config.updated_at = new Date().toISOString();
 
-    fs.writeFileSync(aiConfigPath, JSON.stringify(config, null, 2), 'utf8');
+    fs.writeFileSync(localConfigPath, JSON.stringify(config, null, 2), 'utf8');
+
+    // Update non-secret fields in base config for repository consistency
+    try {
+      const baseConfig = JSON.parse(fs.readFileSync(baseConfigPath, 'utf8'));
+      if (model) baseConfig.model = model.trim();
+      fs.writeFileSync(baseConfigPath, JSON.stringify(baseConfig, null, 2), 'utf8');
+    } catch (baseErr) {}
 
     // Coba reload service jika tersedia
     try {
@@ -200,9 +214,10 @@ async function testModel(req, res) {
 async function resetToEnv(req, res) {
   try {
     let config = {};
-    if (fs.existsSync(aiConfigPath)) {
+    const configPath = getResolvedConfigPath();
+    if (fs.existsSync(configPath)) {
       try {
-        config = JSON.parse(fs.readFileSync(aiConfigPath, 'utf8'));
+        config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
       } catch (e) {
         config = {};
       }
@@ -210,7 +225,7 @@ async function resetToEnv(req, res) {
 
     config.api_key = '';
     config.updated_at = new Date().toISOString();
-    fs.writeFileSync(aiConfigPath, JSON.stringify(config, null, 2), 'utf8');
+    fs.writeFileSync(localConfigPath, JSON.stringify(config, null, 2), 'utf8');
 
     // Reset env
     const env = require('../config/env');

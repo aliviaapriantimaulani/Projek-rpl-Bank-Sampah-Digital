@@ -183,6 +183,63 @@ class AiAssistantService {
       };
     }
 
+    // 0B. Intent: Pertanyaan Peran / Role dalam Sistem ("ada berapa role", "role apa saja", "daftar peran", dll)
+    if (
+      q.includes('ada berapa role') ||
+      q.includes('ada brapa role') ||
+      q.includes('berapa role') ||
+      q.includes('berapa peran') ||
+      q.includes('ada berapa peran') ||
+      q.includes('ada brapa peran') ||
+      q.includes('role apa saja') ||
+      q.includes('peran apa saja') ||
+      q.includes('apa saja role') ||
+      q.includes('apa saja peran') ||
+      q.includes('daftar role') ||
+      q.includes('daftar peran') ||
+      q.includes('role apa aja') ||
+      q.includes('peran apa aja') ||
+      q.includes('role sistem') ||
+      q.includes('role di sistem') ||
+      q.includes('role yang ada') ||
+      q.includes('peran yang ada') ||
+      q.includes('sebutkan role') ||
+      q.includes('sebutkan peran') ||
+      q.includes('macam role') ||
+      q.includes('jenis role') ||
+      q.includes('hak akses role') ||
+      q.includes('tingkatan role') ||
+      q === 'role' ||
+      q === 'peran'
+    ) {
+      return {
+        query,
+        answer:
+          `Sistem **Bank Sampah Digital** menerapkan sistem kendali akses berbasis peran (**Role-Based Access Control / RBAC**) yang terdiri dari **4 Role Utama** (dan 1 role konfigurasi):\n\n` +
+          `1. 👑 **Administrator (ADMIN)**\n` +
+          `   - **Hak Akses**: Hak akses penuh (superadmin) ke seluruh modul dan konfigurasi sistem.\n` +
+          `   - **Tanggung Jawab**: Manajemen data pengguna (user management), audit log aktivitas, monitoring notifikasi WhatsApp, serta pengaturan model & API Key AI.\n\n` +
+          `2. 📊 **Owner / Pengelola (OWNER)**\n` +
+          `   - **Hak Akses**: Dasbor analitik eksekutif dan keuangan operasional.\n` +
+          `   - **Tanggung Jawab**: Memantau tren transaksi, perputaran kas/rupiah, persetujuan (*approval*) penarikan saldo nasabah, monitoring inventaris stok gudang, dan laporan penjualan ke pengepul.\n\n` +
+          `3. ⚖️ **Petugas Timbang / Teller (PETUGAS)**\n` +
+          `   - **Hak Akses**: Dasbor operasional lapangan dan loket timbangan.\n` +
+          `   - **Tanggung Jawab**: Pendaftaran nasabah baru, penimbangan sampah nasabah, pencatatan transaksi setoran, dan melayani pencairan tunai di loket.\n\n` +
+          `4. 👤 **Nasabah / Warga (NASABAH)**\n` +
+          `   - **Hak Akses**: Dasbor personal nasabah warga.\n` +
+          `   - **Fitur & Layanan**: Kartu anggota digital dengan QR Code, buku tabungan sampah digital (cek saldo & riwayat setoran), poin reward hijau, dan pengajuan penarikan saldo secara mandiri.\n\n` +
+          `*(Catatan: Terdapat juga peran **PUSTAKAWAN** yang memiliki hak akses khusus pada pengelolaan data modul dan integrasi).*`,
+        authorized: true,
+        intent: 'SYSTEM_ROLES',
+        source: 'SYSTEM_ROLES',
+        functionCall: null,
+        data: {
+          totalRoles: 4,
+          roles: ['ADMIN', 'OWNER', 'PETUGAS', 'NASABAH'],
+        },
+      };
+    }
+
     // 0. Intent: Total saldo / liabilitas seluruh nasabah (khusus ADMIN & OWNER)
     // Diletakkan paling awal agar tidak tertangkap oleh intent "nasabah" biasa.
     if (
@@ -1325,10 +1382,17 @@ class AiAssistantService {
       );
     }
 
-    // Jawaban dinamis kontekstual untuk pertanyaan lain (tanpa template statis kaku)
-    // BLok ini sudah dinonaktifkan karena semua query sekarang melalui LLM + Function Calling
-    // di nChatbotService. Jika tercapai, lempar error agar terlihat di console.
-    throw new Error('Tidak ada intent yang cocok dan AI tidak merespons. Cek logs untuk detail.');
+    // 4) Jawaban fallback yang informatif dan ramah (tanpa melempar error kaku)
+    return (
+      `${nameGreeting}Terima kasih telah menghubungi **Asisten AI Bank Sampah Digital**.\n\n` +
+      `Saya siap membantu Anda dengan berbagai informasi dan layanan berikut:\n` +
+      `- 👥 **Informasi Peran Sistem**: Tanyakan *"Ada berapa role?"* atau *"Role apa saja?"*\n` +
+      `- 💰 **Informasi Harga Sampah**: Tanyakan *"Berapa harga sampah botol plastik?"* atau *"Harga kardus per kg"*\n` +
+      `- 💳 **Informasi Akun & Saldo**: Tanyakan *"Berapa saldo saya?"* atau *"Siapa saya?"*\n` +
+      `- ♻️ **Panduan Pemilahan**: Tanyakan *"Bagaimana cara membuat kompos?"* atau *"Alur menabung sampah"*\n` +
+      `- 📊 **Statistik & Fitur**: Tanyakan *"Fitur apa saja"* atau *"Status WhatsApp"*\n\n` +
+      `Silakan ketik pertanyaan Anda sesuai topik di atas, atau tanyakan langsung apa yang ingin Anda ketahui! 😊`
+    );
   }
 }
 

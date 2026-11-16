@@ -14,8 +14,14 @@ const db = require('../../config/database');
 const databaseSchemaService = require('./database_schema.service');
 const databaseToolsService = require('./database_tools.service');
 
-const aiConfigPath = path.resolve(__dirname, '../config/ai-config.json');
+const localConfigPath = path.resolve(__dirname, '../config/ai-config.local.json');
+const baseConfigPath = path.resolve(__dirname, '../config/ai-config.json');
 let cachedAiConfig = null;
+
+function getResolvedAiConfigPath() {
+  if (fs.existsSync(localConfigPath)) return localConfigPath;
+  return baseConfigPath;
+}
 
 /**
  * Load AI config from file, with .env as fallback.
@@ -23,6 +29,7 @@ let cachedAiConfig = null;
  */
 function loadAiConfig() {
   try {
+    const aiConfigPath = getResolvedAiConfigPath();
     if (fs.existsSync(aiConfigPath)) {
       const fileConfig = JSON.parse(fs.readFileSync(aiConfigPath, 'utf8'));
       // Merge with .env defaults: file values override .env values
@@ -299,15 +306,52 @@ PANDUAN TAMBAHAN:
    * @param {Array} [params.history] - Conversation history array [{role, content}]
    * @param {Object} [params.user] - Authenticated user context
    */
-  async chat({ message, history = [] }) {
+  async chat({ message, history = [], user }) {
     if (!message || typeof message !== 'string' || !message.trim()) {
       throw new Error('Pesan pertanyaan tidak boleh kosong.');
+    }
+
+    // Refresh dynamic AI configuration from ai-config.json
+    try {
+      const activeConfig = loadAiConfig();
+      if (activeConfig) {
+        this.apiKey = activeConfig.NOUS_API_KEY;
+        this.keyId = activeConfig.NOUS_KEY_ID;
+        this.baseUrl = activeConfig.NOUS_API_BASE_URL;
+        this.defaultModel = activeConfig.NOUS_MODEL;
+        this.timeoutMs = activeConfig.NOUS_TIMEOUT_MS;
+      }
+    } catch (confErr) {
+      console.warn('[NousChatbot] Gagal reload konfigurasi:', confErr.message);
     }
 
     console.log('[NousChatbot] Received message:', message.trim().substring(0, 100) + (message.trim().length > 100 ? '...' : ''));
 
     const trimmedMsg = message.trim();
     const q = trimmedMsg.toLowerCase();
+
+    // DETEKSI PERTANYAAN ROLE SISTEM (RBAC)
+    const rolePhrases = [
+      'ada berapa role', 'ada brapa role', 'berapa role', 'berapa peran',
+      'role apa saja', 'peran apa saja', 'daftar role', 'daftar peran',
+      'apa saja role', 'apa saja peran', 'role di sistem', 'role sistem',
+      'role yang ada', 'peran yang ada'
+    ];
+    if (rolePhrases.some(phrase => q.includes(phrase)) || q === 'role' || q === 'peran') {
+      return {
+        reply:
+          `Sistem **Bank Sampah Digital** menerapkan sistem kendali akses berbasis peran (**RBAC**) dengan **4 Role Utama**:\n\n` +
+          `1. 👑 **Administrator (ADMIN)**: Akses penuh ke seluruh konfigurasi sistem, manajemen akun pengguna, audit log, integrasi AI, dan WhatsApp Gateway.\n` +
+          `2. 📊 **Owner / Pengelola (OWNER)**: Dasbor analitik eksekutif, analisis keuangan, approval penarikan saldo, kontrol stok gudang, dan laporan penjualan ke pengepul.\n` +
+          `3. ⚖️ **Petugas Timbang (PETUGAS)**: Operasional loket penimbangan sampah, input transaksi setoran nasabah, kasir penarikan tunai, dan pendaftaran nasabah.\n` +
+          `4. 👤 **Nasabah Warga (NASABAH)**: Dasbor personal, kartu digital & QR Code, buku tabungan sampah (saldo & mutasi), poin reward hijau, dan pengajuan penarikan saldo mandiri.\n\n` +
+          `*(Catatan: Terdapat juga peran **PUSTAKAWAN** yang memiliki hak akses khusus pada pengelolaan modul dan integrasi).*`,
+        source: 'SYSTEM_ROLES',
+        authorized: true,
+        functionCall: null,
+        model: 'system-roles',
+      };
+    }
 
     // EMERGENCY FALLBACK: Keyword-based database queries
     // These run BEFORE LLM to handle price/category queries directly
