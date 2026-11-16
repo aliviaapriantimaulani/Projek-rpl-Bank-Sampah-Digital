@@ -1,0 +1,13 @@
+{
+  "api_key": "",
+  "model": "meituan/longcat-2.5-preview:free",
+  "base_url": "https://inference-api.nousresearch.com/v1",
+  "key_id": "",
+  "timeout_ms": 20000,
+  "fallback_models": [
+    "meituan/longcat-2.5-preview:free",
+    "poolside/laguna-s-2.1:free",
+    "stepfun/step-3.7-flash:free"
+  ],
+  "description": "AI Configuration - API Key and Model Settings for Nous Research Inference API. Updated via UI/config endpoint."
+}

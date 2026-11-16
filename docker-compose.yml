@@ -1,0 +1,15 @@
+services:
+  app:
+    build: .
+    container_name: bank_sampah_digital_app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DB_CONNECTION=sqlite
+      - DB_SQLITE_FILENAME=/app/data/banksampah.sqlite
+      - JWT_SECRET=super_secret_jwt_key_banksampah_change_in_production_!2026#
+    volumes:
+      - ./data:/app/data

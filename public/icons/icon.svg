@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#047857" />
+      <stop offset="100%" stop-color="#064e3b" />
+    </linearGradient>
+    <linearGradient id="leafGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399" />
+      <stop offset="100%" stop-color="#10b981" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="128" fill="url(#bgGrad)" />
+  <circle cx="256" cy="256" r="190" fill="none" stroke="#10b981" stroke-width="12" stroke-dasharray="24 16" opacity="0.6" />
+  <!-- Recycling Leaves & Digital Node Emblem -->
+  <g transform="translate(256, 256) scale(1.1)">
+    <path d="M-60,-80 C-10,-120 70,-90 60,-20 C50,40 -20,60 -60,0 Z" fill="url(#leafGrad)" opacity="0.9" />
+    <path d="M40,20 C80,60 50,130 -10,120 C-60,110 -70,40 -30,0 Z" fill="#6ee7b7" opacity="0.85" />
+    <circle cx="0" cy="0" r="32" fill="#ffffff" />
+    <circle cx="0" cy="0" r="18" fill="#047857" />
+    <path d="M0,-16 L12,12 L-12,12 Z" fill="#ffffff" />
+  </g>
+</svg>
