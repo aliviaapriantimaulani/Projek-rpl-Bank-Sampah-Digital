@@ -106,9 +106,10 @@ async function updateConfig(req, res) {
     const { api_key, model, base_url, timeout_ms } = req.body;
 
     let config = {};
-    if (fs.existsSync(aiConfigPath)) {
+    const configPath = getResolvedConfigPath();
+    if (fs.existsSync(configPath)) {
       try {
-        config = JSON.parse(fs.readFileSync(aiConfigPath, 'utf8'));
+        config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
       } catch (e) {
         config = {};
       }
