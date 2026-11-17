@@ -376,17 +376,27 @@ const Router = {
 
               <!-- Section: API Key -->
               <div class="integrasi-section-title">API Key</div>
-              <div class="integrasi-meta-row">
+              <div class="integrasi-meta-row" style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
                 <span class="${aiData.is_configured ? 'integrasi-badge-configured' : 'integrasi-badge-unconfigured'}">
                   ${aiData.is_configured ? 'SUDAH DIKONFIGURASI' : 'BELUM DIKONFIGURASI'}
                 </span>
-                <span class="integrasi-key-masked">${aiData.api_key_masked || '••••••••'}</span>
+                <span id="ai-key-masked-display" class="integrasi-key-masked" style="font-family: monospace; font-size: 0.85rem; user-select: all;" data-masked="${aiData.api_key_masked || '••••••••'}" data-raw="${aiData.api_key || ''}">${aiData.api_key_masked || '••••••••'}</span>
+                ${aiData.api_key ? `
+                <button type="button" class="integrasi-btn-toggle-eye" onclick="window.toggleMaskedKeyDisplay()" title="Lihat/Sembunyikan API Key Lengkap" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); border-radius: 6px; padding: 0.2rem 0.55rem; color: #f59e0b; cursor: pointer; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.3rem;">
+                  <span id="ai-key-masked-eye">👁️</span> <span id="ai-key-masked-text" style="font-size: 0.75rem; font-weight: 600;">Lihat</span>
+                </button>
+                ` : ''}
                 <span class="integrasi-source-text">Sumber: ${aiData.source || 'Pengaturan Admin (terenkripsi)'}</span>
               </div>
               <div class="integrasi-timestamp-text">- diperbarui ${aiData.last_updated || '2026-11-16 15:26:05 UTC'}</div>
 
               <div class="integrasi-input-group">
-                <input type="password" id="input-new-ai-key" class="integrasi-input" placeholder="Tempel API Key baru (sk-nous-...)" />
+                <div style="position: relative; flex: 1; min-width: 240px; display: flex; align-items: center;">
+                  <input type="text" id="input-new-ai-key" class="integrasi-input" style="width: 100%; padding-right: 2.75rem;" placeholder="Tempel API Key baru (sk-nous-...)" value="${aiData.api_key || ''}" autocomplete="off" />
+                  <button type="button" id="btn-toggle-input-key" style="position: absolute; right: 0.6rem; background: transparent; border: none; cursor: pointer; font-size: 1.15rem; color: #94a3b8; padding: 0.2rem;" onclick="window.toggleInputAiKeyVisibility()" title="Lihat / Sembunyikan API Key">
+                    👁️
+                  </button>
+                </div>
                 <button type="button" class="integrasi-btn-amber" onclick="window.handleSaveAiKey()">
                   <span>🔑</span> Perbarui API Key
                 </button>
@@ -524,7 +534,12 @@ const Router = {
                 </div>
                 <div style="margin-bottom: 0.75rem;">
                   <label style="font-size: 0.8rem; color: #94a3b8; display: block; margin-bottom: 0.3rem;">Device Token</label>
-                  <input type="password" id="input-wa-device-token" class="integrasi-input" placeholder="Token dari menu Device di dashboard Fonnte" required />
+                  <div style="position: relative; display: flex; align-items: center;">
+                    <input type="text" id="input-wa-device-token" class="integrasi-input" style="width: 100%; padding-right: 2.75rem;" placeholder="Token dari menu Device di dashboard Fonnte" required autocomplete="off" />
+                    <button type="button" id="btn-toggle-wa-token" style="position: absolute; right: 0.6rem; background: transparent; border: none; cursor: pointer; font-size: 1.15rem; color: #94a3b8; padding: 0.2rem;" onclick="window.toggleInputWaTokenVisibility()" title="Lihat / Sembunyikan Token">
+                      👁️
+                    </button>
+                  </div>
                 </div>
                 <div class="integrasi-desc-text" style="margin-bottom: 1rem;">
                   Gunakan Device Token (per device), bukan Account Token. Token dicek ke Fonnte tanpa mengirim pesan WhatsApp.
@@ -543,6 +558,51 @@ const Router = {
       `;
 
       // Window Action Handlers
+      window.toggleMaskedKeyDisplay = () => {
+        const span = document.getElementById('ai-key-masked-display');
+        const eye = document.getElementById('ai-key-masked-eye');
+        const text = document.getElementById('ai-key-masked-text');
+        if (!span) return;
+        const isShowing = span.getAttribute('data-showing-raw') === 'true';
+        if (isShowing) {
+          span.textContent = span.getAttribute('data-masked') || '••••••••';
+          span.setAttribute('data-showing-raw', 'false');
+          if (eye) eye.textContent = '👁️';
+          if (text) text.textContent = 'Lihat';
+        } else {
+          span.textContent = span.getAttribute('data-raw') || span.getAttribute('data-masked');
+          span.setAttribute('data-showing-raw', 'true');
+          if (eye) eye.textContent = '🙈';
+          if (text) text.textContent = 'Sembunyikan';
+        }
+      };
+
+      window.toggleInputAiKeyVisibility = () => {
+        const input = document.getElementById('input-new-ai-key');
+        const btn = document.getElementById('btn-toggle-input-key');
+        if (!input) return;
+        if (input.type === 'password') {
+          input.type = 'text';
+          if (btn) btn.textContent = '👁️';
+        } else {
+          input.type = 'password';
+          if (btn) btn.textContent = '🙈';
+        }
+      };
+
+      window.toggleInputWaTokenVisibility = () => {
+        const input = document.getElementById('input-wa-device-token');
+        const btn = document.getElementById('btn-toggle-wa-token');
+        if (!input) return;
+        if (input.type === 'password') {
+          input.type = 'text';
+          if (btn) btn.textContent = '👁️';
+        } else {
+          input.type = 'password';
+          if (btn) btn.textContent = '🙈';
+        }
+      };
+
       window.handleSaveAiKey = async () => {
         const input = document.getElementById('input-new-ai-key');
         const key = input ? input.value.trim() : '';

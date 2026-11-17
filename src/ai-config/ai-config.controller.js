@@ -76,6 +76,7 @@ async function getConfig(req, res) {
       data: {
         provider: 'xKiro / Nous Research',
         is_configured: Boolean(activeKey && activeKey.length > 0),
+        api_key: activeKey || '',
         api_key_masked: maskKey(activeKey),
         source: hasCustomKey ? 'Pengaturan Admin (terenkripsi)' : 'Default (environment)',
         last_updated: fileStat ? new Date(fileStat.mtime).toISOString().replace('T', ' ').slice(0, 19) + ' UTC' : '2026-11-16 15:26:05 UTC',
@@ -158,6 +159,7 @@ async function updateConfig(req, res) {
     return res.json({
       success: true,
       data: {
+        api_key: updatedKey || '',
         api_key_masked: maskKey(updatedKey),
         active_model: updatedModel,
         last_updated: new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC',
@@ -234,6 +236,7 @@ async function resetToEnv(req, res) {
     return res.json({
       success: true,
       data: {
+        api_key: env.NOUS_API_KEY || '',
         api_key_masked: maskKey(env.NOUS_API_KEY || ''),
         source: 'Default (environment)',
         last_updated: new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC'
