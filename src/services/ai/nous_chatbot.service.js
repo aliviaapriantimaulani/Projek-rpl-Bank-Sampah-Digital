@@ -269,12 +269,16 @@ ATURAN UTAMA:
    - Contoh: pengguna bertanya "gimana cara bikin kompos?" → jawab dengan panduan kompos yang benar. Pengguna bertanya "resep nasi goreng" → boleh dijawab singkat dan ramah, lalu ajak kembali ke topik bank sampah.
 
 3. HARGA SAMPAH & KALKULATOR NILAI SAMPAH:
+   - JIKA PENGGUNA MENANYAKAN HARGA ITEM SPESIFIK (contoh: "berapa harga botol kaca bening utuh", "harga kardus box", "harga kaleng"):
+     * LANGSUNG JAWAB HARGA ITEM TERSEBUT SECARA TO THE POINT (contoh: "Harga beli resmi **Botol Kaca Bening Utuh** adalah **Rp 1.200 / KG** (harga jual: Rp 2.000 / KG).").
+     * DILARANG KERAS menyebutkan kategori atau item lain yang tidak ditanyakan (misal dilarang menyebut plastik jika ditanya botol kaca).
+     * DILARANG menyertakan perkiraan umum pasar atau paragraf basa-basi jika harga resmi katalog sudah ada.
    - Hubungkan perhitungan dengan DAFTAR KATEGORI & HARGA BELI SAMPAH RESMI BANK SAMPAH DIGITAL di bawah.
    - Jika pengguna bertanya tentang harga atau nilai dari berat tertentu suatu jenis sampah (contoh: "menyetorkan 5 kg kardus, berapa harganya", "kalau bawa 10 kg botol plastik dapat berapa", "3 kg besi berapa uangnya"):
      a) Cari harga beli per kg resmi untuk jenis sampah tersebut dari data tabel database.
      b) Kalikan berat (kg) dengan harga per kg (Total = Berat × Harga/kg).
      c) Langsung sebutkan rincian perhitungannya secara jelas, ramah, dan to the point tanpa basa-basi sambutan panjang (contoh: "Harga kardus saat ini Rp 2.200/kg, jadi untuk 5 kg perkiraan nilainya adalah **Rp 11.000** (5 kg × Rp 2.200/kg)").
-   - Jika ditanya harga umum tanpa berat, berikan harga resmi katalog di bawah beserta perkiraan umum pasar.
+   - Jika ditanya harga umum tanpa berat, berikan harga resmi katalog di bawah.
    - PENTING: Kurangi basa-basi sambutan yang terlalu panjang jika pengguna langsung bertanya spesifik tentang harga, kalkulasi nilai, atau data operasional. Langsung jawab to the point!
 
 4. KARAKTER & CARA MENJAWAB:
@@ -528,26 +532,139 @@ PANDUAN TAMBAHAN:
       }
     }
 
-    // EMERGENCY FALLBACK: Keyword-based database queries
-    // These run BEFORE LLM to handle price/category queries directly
-    const emergencyKeywords = ['mahal', 'harga', 'paling mahal'];
-    const emergencyDetected = emergencyKeywords.some(kw => q.includes(kw));
+    // 5. DETEKSI PERTANYAAN HARGA SAMPAH ("berapa harga botol kaca bening utuh", "harga kardus", "daftar harga")
+    const isPriceQuery = (q.includes('harga') || q.includes('price') || q.includes('tarif') || q.includes('biaya')) && !q.includes('paling mahal') && !q.includes('termahal');
+    if (isPriceQuery) {
+      try {
+        const categories = await db('waste_categories')
+          .leftJoin('waste_prices', function () {
+            this.on('waste_categories.id', '=', 'waste_prices.waste_category_id')
+              .andOn('waste_prices.is_active', '=', db.raw('?', [1]));
+          })
+          .where('waste_categories.is_active', 1)
+          .select(
+            'waste_categories.id',
+            'waste_categories.code',
+            'waste_categories.name',
+            'waste_categories.parent_category',
+            'waste_categories.unit',
+            'waste_prices.buying_price',
+            'waste_prices.selling_price'
+          );
 
-    if (emergencyDetected) {
-      // Query database for most expensive waste category
+        const stopWords = [
+          'berapa', 'brapa', 'harga', 'harganya', 'tarif', 'biaya', 'price', 'rate',
+          'beli', 'jual', 'saat', 'ini', 'sekarang', 'per', 'kilo', 'kg', 'liter',
+          'satuan', 'dong', 'ya', 'kah', 'tolong', 'info', 'cek', 'ada', 'apa', 'saja',
+          'daftar', 'sampah', 'jenis'
+        ];
+        const tokens = q
+          .replace(/[^\w\s-]/g, ' ')
+          .split(/\s+/)
+          .filter((w) => w.length > 1 && !stopWords.includes(w));
+        const cleanPhrase = tokens.join(' ');
+
+        const scored = categories
+          .filter((c) => c.buying_price)
+          .map((item) => {
+            const nameLower = item.name.toLowerCase();
+            const parentLower = (item.parent_category || '').toLowerCase();
+            const codeLower = item.code.toLowerCase();
+            let score = 0;
+
+            if (cleanPhrase && nameLower.includes(cleanPhrase)) score += 100 + cleanPhrase.length;
+            if (cleanPhrase && cleanPhrase.includes(nameLower)) score += 80;
+
+            let tokenMatches = 0;
+            for (const t of tokens) {
+              if (nameLower.includes(t)) {
+                tokenMatches++;
+                score += 10;
+              } else if (parentLower.includes(t) || codeLower.includes(t)) {
+                score += 5;
+              }
+            }
+            return { item, score, tokenMatches };
+          });
+
+        scored.sort((a, b) => b.score - a.score);
+        const top = scored[0];
+        const topScore = top ? top.score : 0;
+
+        if (top && topScore >= 10) {
+          const topMatches = scored.filter((s) => s.score === topScore);
+          if (topMatches.length === 1 || top.score >= 100) {
+            const item = top.item;
+            const unit = (item.unit || 'KG').toUpperCase();
+            const buyStr = `Rp ${Number(item.buying_price).toLocaleString('id-ID')}`;
+            let reply = `Harga beli resmi **${item.name}** adalah **${buyStr} / ${unit}**`;
+            if (item.selling_price && Number(item.selling_price) > 0) {
+              reply += ` (harga jual: Rp ${Number(item.selling_price).toLocaleString('id-ID')} / ${unit}).`;
+            } else {
+              reply += '.';
+            }
+
+            return {
+              reply,
+              source: 'DATABASE_TOOL',
+              authorized: true,
+              functionCall: null,
+              model: 'database-price',
+            };
+          } else {
+            const lines = topMatches.map((s) => {
+              const u = (s.item.unit || 'KG').toUpperCase();
+              const buy = `Rp ${Number(s.item.buying_price).toLocaleString('id-ID')}`;
+              return `- **${s.item.name}**: **${buy} / ${u}**`;
+            });
+
+            return {
+              reply: `Berikut daftar harga resmi untuk **${cleanPhrase || 'kategori tersebut'}** di Bank Sampah Digital:\n\n` + lines.join('\n'),
+              source: 'DATABASE_TOOL',
+              authorized: true,
+              functionCall: null,
+              model: 'database-price',
+            };
+          }
+        }
+
+        // Jika pertanyaan daftar harga umum
+        if (categories.length) {
+          const lines = categories
+            .filter((c) => c.buying_price)
+            .map((c) => {
+              const u = (c.unit || 'KG').toUpperCase();
+              const buy = `Rp ${Number(c.buying_price).toLocaleString('id-ID')}`;
+              return `- **${c.name}**: **${buy} / ${u}**`;
+            });
+
+          return {
+            reply: `Berikut daftar harga beli resmi Bank Sampah Digital saat ini:\n\n` + lines.join('\n'),
+            source: 'DATABASE_TOOL',
+            authorized: true,
+            functionCall: null,
+            model: 'database-price',
+          };
+        }
+      } catch (err) {
+        console.warn('[NousChatbot] Error querying waste prices:', err.message);
+      }
+    }
+
+    // EMERGENCY FALLBACK: Kategori sampah paling mahal / termahal
+    const expensiveKeywords = ['paling mahal', 'termahal', 'harga tertinggi'];
+    const expensiveDetected = expensiveKeywords.some(kw => q.includes(kw));
+
+    if (expensiveDetected) {
       try {
         const expensiveWaste = await databaseToolsService.executeTool('get_waste_category_status', { waste_type: '' }, user);
         if (expensiveWaste && expensiveWaste.success) {
           const data = expensiveWaste.data;
-          const summary = expensiveWaste.summary || '';
           return {
-            reply: `💰 **Sampah Mahal Terjangkau:**\n\n` +
+            reply: `💰 **Sampah Termahal Saat Ini:**\n\n` +
               `Kategori: **${data.name}** (${data.code})\n` +
-              `Status: ${data.isActive ? 'Aktif' : 'Non-Aktif'}\n` +
               `Satuan: **${data.unit}**\n` +
-              `Harga Beli: **Rp ${(data.buying_price || 0).toLocaleString('id-ID')}**/${data.unit}\n\n` +
-              `Ini adalah sampah dengan harga beli tertinggi saat ini di Bank Sampah Digital. ` +
-              `Untuk kalkulasi nilai sampah Anda, kalikan berat (kg) dengan harga di atas.`,
+              `Harga Beli Resmi: **Rp ${(data.buying_price || 0).toLocaleString('id-ID')}**/${data.unit}.`,
             source: 'DATABASE_FALLBACK',
             authorized: true,
             functionCall: { tool: 'get_waste_category_status', arguments: { waste_type: '' }, data: data },
@@ -557,7 +674,6 @@ PANDUAN TAMBAHAN:
       } catch (e) {
         console.error('[NousChatbot] Emergency fallback failed:', e.message);
       }
-      // Jika gagal, lanjut ke LLM biasa
     }
 
     // DETEKSI PANDUAN UMUM SEBELUM/SESUDAH LLM

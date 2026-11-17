@@ -42,10 +42,12 @@ const EXECUTIVE_ROLES = ['ADMIN', 'OWNER'];
 const PRICE_CATEGORY_KEYWORDS = [
   { label: 'Besi & Logam', patterns: ['besi', 'logam', 'baja', 'besi tua', 'kaleng besi'] },
   { label: 'Aluminium', patterns: ['aluminium', 'aluminum', 'kaleng minuman', 'kaleng aluminium'] },
-  { label: 'Plastik', patterns: ['plastik', 'pet', 'hdpe', 'botol plastik', 'botol'] },
+  { label: 'Plastik', patterns: ['plastik', 'pet', 'hdpe', 'botol plastik'] },
   { label: 'Kertas', patterns: ['kertas', 'hvs', 'koran', 'majalah', 'buku'] },
   { label: 'Kardus', patterns: ['kardus', 'karton', 'cardboard'] },
-  { label: 'Kaca', patterns: ['kaca', 'glass', 'pecahan kaca'] },
+  { label: 'Kaca', patterns: ['kaca', 'glass', 'pecahan kaca', 'botol kaca'] },
+  { label: 'Minyak Jelantah', patterns: ['jelantah', 'minyak jelantah', 'minyak goreng bekas'] },
+  { label: 'Elektronik', patterns: ['elektronik', 'e-waste', 'pcb', 'hp bekas'] },
 ];
 
 const GENERAL_PRICE_BY_LABEL = {
@@ -583,105 +585,185 @@ class AiAssistantService {
       };
     }
 
-    // 2. Intent: Perkiraan harga sampah ("Berapa harga sampah plastik?", "harga besi?", "harga kertas per kg?")
-    if (q.includes('harga') || q.includes('price')) {
-      const requestedGroups = PRICE_CATEGORY_KEYWORDS.filter((group) =>
-        group.patterns.some((pattern) => q.includes(pattern))
-      );
-
-      let localPrices = [];
+    // 2. Intent: Perkiraan & Info Harga Sampah ("Berapa harga botol kaca bening utuh?", "harga besi?", "daftar harga", dll)
+    // ATURAN: Jawab langsung to the point tanpa basa-basi dan tanpa menampilkan kategori lain yang tidak ditanyakan.
+    if (q.includes('harga') || q.includes('price') || q.includes('tarif') || q.includes('biaya')) {
+      let categories = [];
       try {
-        const categories = await db('waste_categories')
+        categories = await db('waste_categories')
           .leftJoin('waste_prices', function () {
             this.on('waste_categories.id', '=', 'waste_prices.waste_category_id')
               .andOn('waste_prices.is_active', '=', db.raw('?', [1]));
           })
           .where('waste_categories.is_active', 1)
           .select(
+            'waste_categories.id',
             'waste_categories.code',
             'waste_categories.name',
             'waste_categories.parent_category',
             'waste_categories.unit',
-            'waste_prices.buying_price'
+            'waste_prices.buying_price',
+            'waste_prices.selling_price'
           );
-
-        localPrices = categories
-          .filter((c) => c.buying_price)
-          .map((c) => ({
-            code: c.code,
-            name: c.name,
-            parent: c.parent_category,
-            unit: c.unit || 'kg',
-            price: Number(c.buying_price),
-            line: `- **${c.name}**: Rp ${Number(c.buying_price).toLocaleString('id-ID')} / ${c.unit || 'kg'}`,
-          }));
       } catch (err) {
         console.warn('[AiAssistant] Gagal memuat harga lokal:', err.message);
       }
 
-      const matchesRequestedGroup = (price) => {
-        if (!requestedGroups.length) return true;
-        const haystack = `${price.name} ${price.parent || ''} ${price.code || ''}`.toLowerCase();
-        return requestedGroups.some((group) =>
-          group.patterns.some((pattern) => haystack.includes(pattern))
-        );
-      };
+      const stopWords = [
+        'berapa', 'brapa', 'harga', 'harganya', 'tarif', 'biaya', 'price', 'rate',
+        'beli', 'jual', 'saat', 'ini', 'sekarang', 'per', 'kilo', 'kg', 'liter',
+        'satuan', 'dong', 'ya', 'kah', 'tolong', 'info', 'cek', 'ada', 'apa', 'saja',
+        'daftar', 'sampah', 'jenis'
+      ];
+      const tokens = q
+        .replace(/[^\w\s-]/g, ' ')
+        .split(/\s+/)
+        .filter((w) => w.length > 1 && !stopWords.includes(w));
+      const cleanPhrase = tokens.join(' ');
 
-      const matchingPrices = localPrices.filter(matchesRequestedGroup);
-      const requestedLabel = requestedGroups.map((g) => g.label).join(' / ');
+      // Hitung skor kecocokan setiap item katalog
+      const scored = categories
+        .filter((c) => c.buying_price)
+        .map((item) => {
+          const nameLower = item.name.toLowerCase();
+          const parentLower = (item.parent_category || '').toLowerCase();
+          const codeLower = item.code.toLowerCase();
+          let score = 0;
 
-      let answer;
-      if (requestedGroups.length) {
-        const generalLines = requestedGroups
-          .map((group) => `- **${group.label}**: ${GENERAL_PRICE_BY_LABEL[group.label] || 'harga fluktuatif'}`)
-          .join('\n');
+          // Kecocokan frasa langsung
+          if (cleanPhrase && nameLower.includes(cleanPhrase)) {
+            score += 100 + cleanPhrase.length;
+          }
+          if (cleanPhrase && cleanPhrase.includes(nameLower)) {
+            score += 80;
+          }
 
-        answer =
-          `Berikut informasi harga untuk **${requestedLabel}**:\n\n` +
-          `**Kisaran harga umum pasar:**\n${generalLines}\n\n`;
+          // Kecocokan token kata kunci
+          let tokenMatches = 0;
+          for (const t of tokens) {
+            if (nameLower.includes(t)) {
+              tokenMatches++;
+              score += 10;
+            } else if (parentLower.includes(t)) {
+              score += 5;
+            } else if (codeLower.includes(t)) {
+              score += 5;
+            }
+          }
 
-        if (matchingPrices.length) {
-          answer +=
-            `📌 **Harga resmi Bank Sampah Digital saat ini:**\n` +
-            `${matchingPrices.map((p) => p.line).join('\n')}\n\n`;
+          return { item, score, tokenMatches };
+        });
+
+      scored.sort((a, b) => b.score - a.score);
+      const top = scored[0];
+      const topScore = top ? top.score : 0;
+
+      // 1. Jika ada item katalog spesifik yang cocok (misal "botol kaca bening utuh", "kardus box", dll)
+      if (top && topScore >= 10) {
+        const topMatches = scored.filter((s) => s.score === topScore);
+        // Jika 1 item jelas paling cocok atau frasa persis cocok
+        if (topMatches.length === 1 || top.score >= 100) {
+          const item = top.item;
+          const unit = (item.unit || 'KG').toUpperCase();
+          const buyStr = `Rp ${Number(item.buying_price).toLocaleString('id-ID')}`;
+          let answer = `Harga beli resmi **${item.name}** adalah **${buyStr} / ${unit}**`;
+          if (item.selling_price && Number(item.selling_price) > 0) {
+            answer += ` (harga jual: Rp ${Number(item.selling_price).toLocaleString('id-ID')} / ${unit}).`;
+          } else {
+            answer += '.';
+          }
+
+          return {
+            query,
+            answer,
+            authorized: true,
+            intent: 'PRICE_ESTIMATE',
+            data: {
+              item: item.name,
+              code: item.code,
+              unit: item.unit,
+              buyingPrice: Number(item.buying_price),
+              sellingPrice: item.selling_price ? Number(item.selling_price) : null,
+            },
+          };
         } else {
-          answer +=
-            `ℹ️ Harga resmi untuk kategori tersebut belum tercatat di katalog Bank Sampah Digital. ` +
-            `Silakan konfirmasi ke petugas saat menimbang.\n\n`;
-        }
+          // Jika beberapa item spesifik sama kuat skornya (misal "harga botol" mencakup botol kaca & botol plastik)
+          const lines = topMatches.map((s) => {
+            const u = (s.item.unit || 'KG').toUpperCase();
+            const buy = `Rp ${Number(s.item.buying_price).toLocaleString('id-ID')}`;
+            return `- **${s.item.name}**: **${buy} / ${u}**`;
+          });
 
-        answer +=
-          `⚠️ *Harga resmi dapat berubah mengikuti kondisi pasar dan kualitas sampah ` +
-          `(bersih/kering lebih bernilai).*`;
-      } else {
-        const priceLines = GENERAL_WASTE_PRICE_RANGES.map(
-          (p) => `- **${p.label}**: ${p.range}`
-        ).join('\n');
-
-        answer =
-          `Berikut **perkiraan kisaran harga umum** jenis sampah daur ulang di pasaran:\n\n` +
-          `${priceLines}\n\n` +
-          `⚠️ *Catatan: Kisaran harga tersebut bersifat umum sebagai gambaran pasar. ` +
-          `Harga pasti dapat disesuaikan dengan ketentuan bank sampah setempat — ` +
-          `untuk harga resmi Bank Sampah Digital, silakan lihat daftar harga berikut atau tanyakan langsung kepada petugas.*`;
-
-        if (localPrices.length) {
-          answer +=
-            `\n\n📌 **Daftar harga resmi Bank Sampah Digital saat ini:**\n` +
-            `${localPrices.map((p) => p.line).join('\n')}`;
+          return {
+            query,
+            answer: `Berikut daftar harga resmi untuk **${cleanPhrase || 'kategori tersebut'}** di Bank Sampah Digital:\n\n` + lines.join('\n'),
+            authorized: true,
+            intent: 'PRICE_ESTIMATE',
+            data: topMatches.map((s) => s.item),
+          };
         }
       }
 
+      // 2. Jika mencocokkan kelompok kategori (Plastik, Kertas, Kardus, Besi, Aluminium, Kaca)
+      const requestedGroups = PRICE_CATEGORY_KEYWORDS.filter((group) =>
+        group.patterns.some((pattern) => q.includes(pattern))
+      );
+
+      if (requestedGroups.length) {
+        const matchesRequestedGroup = (price) => {
+          const haystack = `${price.name} ${price.parent_category || ''} ${price.code || ''}`.toLowerCase();
+          return requestedGroups.some((group) =>
+            group.patterns.some((pattern) => haystack.includes(pattern))
+          );
+        };
+
+        const matchingPrices = categories.filter(matchesRequestedGroup);
+        const requestedLabel = requestedGroups.map((g) => g.label).join(' / ');
+
+        if (matchingPrices.length) {
+          const lines = matchingPrices.map((p) => {
+            const u = (p.unit || 'KG').toUpperCase();
+            const buy = `Rp ${Number(p.buying_price).toLocaleString('id-ID')}`;
+            return `- **${p.name}**: **${buy} / ${u}**`;
+          });
+
+          return {
+            query,
+            answer: `Berikut daftar harga resmi **${requestedLabel}** di Bank Sampah Digital:\n\n` + lines.join('\n'),
+            authorized: true,
+            intent: 'PRICE_ESTIMATE',
+            data: matchingPrices,
+          };
+        }
+      }
+
+      // 3. Jika pertanyaan daftar harga umum tanpa spesifikasi
+      if (categories.length) {
+        const lines = categories
+          .filter((c) => c.buying_price)
+          .map((c) => {
+            const u = (c.unit || 'KG').toUpperCase();
+            const buy = `Rp ${Number(c.buying_price).toLocaleString('id-ID')}`;
+            return `- **${c.name}**: **${buy} / ${u}**`;
+          });
+
+        return {
+          query,
+          answer: `Berikut daftar harga beli resmi Bank Sampah Digital saat ini:\n\n` + lines.join('\n'),
+          authorized: true,
+          intent: 'PRICE_ESTIMATE',
+          data: categories,
+        };
+      }
+
+      // Fallback perkiraan harga pasar jika katalog kosong
+      const priceLines = GENERAL_WASTE_PRICE_RANGES.map((p) => `- **${p.label}**: ${p.range}`).join('\n');
       return {
         query,
-        answer,
+        answer: `Berikut perkiraan kisaran harga umum jenis sampah di pasaran:\n\n` + priceLines,
         authorized: true,
         intent: 'PRICE_ESTIMATE',
-        data: {
-          requestedCategories: requestedGroups.map((g) => g.label),
-          generalRanges: GENERAL_WASTE_PRICE_RANGES,
-          localPrices: (requestedGroups.length ? matchingPrices : localPrices).map((p) => p.line),
-        },
+        data: GENERAL_WASTE_PRICE_RANGES,
       };
     }
 
