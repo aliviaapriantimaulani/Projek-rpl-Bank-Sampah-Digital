@@ -647,6 +647,12 @@ const Router = {
         try {
           showToast(`Mengaktifkan model ${modelId}...`, 'info');
           const res = await API.updateAiConfig({ model: modelId });
+          const simpleKey = modelId.toLowerCase().includes('grok') ? 'grok' : 'gemini';
+          if (typeof State !== 'undefined' && State.setAiModel) {
+            State.setAiModel(simpleKey);
+          } else {
+            localStorage.setItem('bs_ai_model', simpleKey);
+          }
           showToast(`Model ${modelId} sekarang menjadi model aktif!`, 'success');
           Router.renderAdminIntegrasi();
         } catch (e) {

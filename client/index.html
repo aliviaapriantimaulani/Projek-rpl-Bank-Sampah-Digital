@@ -72,23 +72,6 @@
       <!-- Dynamic Role-Based Navigation Menu -->
       <nav class="sidebar-nav" id="sidebar-menu"></nav>
 
-      <!-- AI Model Switcher Component (Admin Only - rendered by JS) -->
-      <div class="sidebar-ai-switcher" id="sidebar-ai-switcher" style="display: none;">
-        <div class="ai-switcher-header">
-          <div class="ai-switcher-label">
-            <span class="ai-switcher-icon">🤖</span>
-            <span>Model AI</span>
-          </div>
-          <span class="ai-switcher-badge" id="ai-model-badge">Gemini</span>
-        </div>
-        <div class="ai-switcher-select-wrap">
-          <select id="ai-model-select" class="ai-switcher-select" onchange="handleAiModelChange(this.value)" aria-label="Pilih Model AI">
-            <option value="gemini" selected>Google Gemini 1.5 Pro</option>
-            <option value="grok">xAI Grok 2</option>
-          </select>
-        </div>
-      </div>
-
       <!-- Theme Toggle Button -->
       <div class="sidebar-theme-toggle" id="sidebar-theme-toggle">
         <button type="button" class="theme-toggle-btn" id="theme-toggle-btn" onclick="toggleTheme()" aria-label="Ganti Tema" title="Ganti Tema Gelap/Terang">
