@@ -440,6 +440,94 @@ PANDUAN TAMBAHAN:
       };
     }
 
+    // 4. Deteksi Pertanyaan Saldo / Tabungan / Poin / Data Spesifik Nasabah Berdasarkan Nama
+    const isCustomerDataQuery =
+      (q.includes('saldo') || q.includes('tabungan') || q.includes('poin') || q.includes('point') || q.includes('rekening') || q.includes('setoran') || q.includes('sampah')) &&
+      !q.includes('saldo saya') &&
+      !q.includes('poin saya') &&
+      !q.includes('tabungan saya') &&
+      !q.includes('saldo seluruh') &&
+      !q.includes('total saldo seluruh') &&
+      !q.includes('seluruh nasabah') &&
+      !q.includes('semua nasabah');
+
+    if (isCustomerDataQuery) {
+      const stopWords = [
+        'berapa', 'brapa', 'jumlah', 'total', 'saldo', 'tabungan', 'poin', 'point',
+        'uang', 'isi', 'cek', 'lihat', 'data', 'info', 'nasabah', 'warga', 'akun',
+        'rekening', 'nomor', 'no', 'milik', 'punya', 'si', 'dari', 'pada', 'adalah',
+        'terdaftar', 'nya', 'ya', 'dong', 'kah', 'tolong', 'bisa', 'mohon'
+      ];
+      const candidate = q
+        .split(/\s+/)
+        .filter(w => !stopWords.includes(w))
+        .join(' ')
+        .trim();
+
+      if (candidate.length >= 2) {
+        try {
+          const cust = await db('customers')
+            .join('users', 'customers.user_id', 'users.id')
+            .leftJoin('customer_wallets', 'customers.id', 'customer_wallets.customer_id')
+            .leftJoin('points', 'customers.id', 'points.customer_id')
+            .where(function () {
+              this.where('users.name', 'like', '%' + candidate + '%')
+                .orWhere('customers.account_no', 'like', '%' + candidate + '%');
+            })
+            .select(
+              'customers.id',
+              'users.name',
+              'customers.account_no',
+              'customers.status',
+              'customer_wallets.current_balance',
+              'customer_wallets.accumulated_earnings',
+              'points.current_points'
+            )
+            .first();
+
+          if (cust) {
+            const bal = parseFloat(cust.current_balance || 0);
+            const pts = parseInt(cust.current_points || 0, 10);
+
+            if (q.includes('poin') || q.includes('point')) {
+              return {
+                reply: `Total poin reward **${cust.name}** adalah **${pts.toLocaleString('id-ID')} Poin**.`,
+                source: 'DATABASE_TOOL',
+                authorized: true,
+                functionCall: null,
+                model: 'database-tool',
+              };
+            }
+
+            if (q.includes('setoran') || q.includes('sampah')) {
+              let weight = 0;
+              try {
+                const dep = await db('waste_deposit_transactions').where({ customer_id: cust.id }).sum('total_weight_kg as total').first();
+                weight = parseFloat(dep?.total || 0);
+              } catch (e) {}
+              return {
+                reply: `Total sampah yang disetorkan **${cust.name}** adalah **${weight.toLocaleString('id-ID')} kg**.`,
+                source: 'DATABASE_TOOL',
+                authorized: true,
+                functionCall: null,
+                model: 'database-tool',
+              };
+            }
+
+            return {
+              reply: `Saldo tabungan **${cust.name}** adalah **Rp ${bal.toLocaleString('id-ID')}** (Poin: ${pts.toLocaleString('id-ID')}).`,
+              source: 'DATABASE_TOOL',
+              authorized: true,
+              functionCall: null,
+              model: 'database-tool',
+            };
+          }
+        } catch (dbErr) {
+          console.warn('[NousChatbot] Customer lookup error:', dbErr.message);
+        }
+      }
+    }
+
     // EMERGENCY FALLBACK: Keyword-based database queries
     // These run BEFORE LLM to handle price/category queries directly
     const emergencyKeywords = ['mahal', 'harga', 'paling mahal'];

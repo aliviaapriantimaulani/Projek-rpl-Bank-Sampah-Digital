@@ -328,11 +328,120 @@ class AiAssistantService {
       };
     }
 
+    // 0D. Intent: Saldo / Poin / Data Spesifik Nasabah Berdasarkan Nama atau No. Rekening ("berapa jumlah saldo tabungan bina", "saldo budi", dll)
+    const isCustomerDataQuery =
+      (q.includes('saldo') || q.includes('tabungan') || q.includes('poin') || q.includes('point') || q.includes('rekening') || q.includes('setoran') || q.includes('sampah')) &&
+      !q.includes('saldo saya') &&
+      !q.includes('poin saya') &&
+      !q.includes('tabungan saya') &&
+      !q.includes('saldo seluruh') &&
+      !q.includes('total saldo seluruh') &&
+      !q.includes('seluruh nasabah') &&
+      !q.includes('semua nasabah');
+
+    if (isCustomerDataQuery) {
+      const stopWords = [
+        'berapa', 'brapa', 'jumlah', 'total', 'saldo', 'tabungan', 'poin', 'point',
+        'uang', 'isi', 'cek', 'lihat', 'data', 'info', 'nasabah', 'warga', 'akun',
+        'rekening', 'nomor', 'no', 'milik', 'punya', 'si', 'dari', 'pada', 'adalah',
+        'terdaftar', 'nya', 'ya', 'dong', 'kah', 'tolong', 'bisa', 'mohon'
+      ];
+      const candidate = q
+        .split(/\s+/)
+        .filter(w => !stopWords.includes(w.toLowerCase()))
+        .join(' ')
+        .trim();
+
+      if (candidate.length >= 2) {
+        let customer = null;
+        try {
+          customer = await db('customers')
+            .join('users', 'customers.user_id', 'users.id')
+            .leftJoin('customer_wallets', 'customers.id', 'customer_wallets.customer_id')
+            .leftJoin('points', 'customers.id', 'points.customer_id')
+            .where(function () {
+              this.where('users.name', 'like', `%${candidate}%`)
+                .orWhere('customers.account_no', 'like', `%${candidate}%`);
+            })
+            .select(
+              'customers.id',
+              'users.name',
+              'customers.account_no',
+              'customers.status',
+              'customer_wallets.current_balance',
+              'customer_wallets.accumulated_earnings',
+              'points.current_points'
+            )
+            .first();
+        } catch (dbErr) {
+          console.warn('[AiAssistant] Error finding customer:', dbErr.message);
+        }
+
+        if (customer) {
+          // RBAC Check: Nasabah may only see their own balance
+          if (userRole === 'NASABAH' && user?.customer_id && Number(user.customer_id) !== Number(customer.id)) {
+            return {
+              query,
+              answer: 'Demi privasi dan keamanan nasabah, informasi saldo dan data keuangan nasabah lain hanya dapat diakses oleh Petugas, Admin, atau Owner.',
+              authorized: false,
+              intent: 'CUSTOMER_DATA_LOOKUP',
+              source: 'ACCESS_RESTRICTED',
+              data: null,
+            };
+          }
+
+          const bal = parseFloat(customer.current_balance || 0);
+          const pts = parseInt(customer.current_points || 0, 10);
+
+          if (q.includes('poin') || q.includes('point')) {
+            return {
+              query,
+              answer: `Total poin reward **${customer.name}** adalah **${pts.toLocaleString('id-ID')} Poin**.`,
+              authorized: true,
+              intent: 'CUSTOMER_POINTS_LOOKUP',
+              source: 'DATABASE_TOOL',
+              data: { customer: customer.name, accountNo: customer.account_no, points: pts },
+            };
+          }
+
+          if (q.includes('setoran') || q.includes('sampah')) {
+            let weight = 0;
+            try {
+              const depAgg = await db('waste_deposit_transactions')
+                .where({ customer_id: customer.id })
+                .sum('total_weight_kg as total')
+                .first();
+              weight = parseFloat(depAgg?.total || 0);
+            } catch (e) {}
+            return {
+              query,
+              answer: `Total sampah yang disetorkan **${customer.name}** adalah **${weight.toLocaleString('id-ID')} kg**.`,
+              authorized: true,
+              intent: 'CUSTOMER_WASTE_LOOKUP',
+              source: 'DATABASE_TOOL',
+              data: { customer: customer.name, accountNo: customer.account_no, totalKg: weight },
+            };
+          }
+
+          // Default: Saldo tabungan (sesuai aturan ringkas langsung sebutkan angka/nominal)
+          return {
+            query,
+            answer: `Saldo tabungan **${customer.name}** adalah **Rp ${bal.toLocaleString('id-ID')}** (Poin: ${pts.toLocaleString('id-ID')}).`,
+            authorized: true,
+            intent: 'CUSTOMER_BALANCE_LOOKUP',
+            source: 'DATABASE_TOOL',
+            data: { customer: customer.name, accountNo: customer.account_no, balance: bal, points: pts },
+          };
+        }
+      }
+    }
+
     // 0. Intent: Total saldo / liabilitas seluruh nasabah (khusus ADMIN & OWNER)
     // Diletakkan paling awal agar tidak tertangkap oleh intent "nasabah" biasa.
     if (
       q.includes('total saldo') ||
-      q.includes('saldo nasabah') ||
+      q.includes('saldo seluruh nasabah') ||
+      q.includes('total saldo nasabah') ||
       q.includes('saldo seluruh') ||
       q.includes('liabilitas saldo') ||
       q.includes('total tabungan nasabah')
