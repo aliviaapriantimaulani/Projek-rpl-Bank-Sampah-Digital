@@ -6,6 +6,25 @@ const whatsappService = require('./services/notification/whatsapp.service');
 
 const startServer = async () => {
   try {
+    // Ensure MySQL database exists if running on MySQL
+    if (env.DB_CONNECTION === 'mysql') {
+      try {
+        const mysql = require('mysql2/promise');
+        const connection = await mysql.createConnection({
+          host: env.DB_HOST || '127.0.0.1',
+          port: Number(env.DB_PORT) || 3306,
+          user: env.DB_USERNAME || 'root',
+          password: env.DB_PASSWORD || '',
+        });
+        await connection.query(
+          `CREATE DATABASE IF NOT EXISTS \`${env.DB_DATABASE || 'bank_sampah_digital'}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`
+        );
+        await connection.end();
+      } catch (dbInitErr) {
+        logger.warn('MySQL auto-create database check warning: ' + dbInitErr.message);
+      }
+    }
+
     // Test DB connection
     await db.raw('SELECT 1');
     logger.info(`Database connected successfully via ${env.DB_CONNECTION.toUpperCase()}`);
