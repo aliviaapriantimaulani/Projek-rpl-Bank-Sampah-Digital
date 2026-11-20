@@ -81,6 +81,24 @@ class NousChatbotService {
   }
 
   /**
+   * Return safe provider status without exposing secret API key
+   */
+  getStatus() {
+    const config = loadAiConfig();
+    const keyId = config.NOUS_KEY_ID || this.keyId || '';
+    const apiKey = config.NOUS_API_KEY || this.apiKey || '';
+    return {
+      provider: 'Nous Research',
+      hasApiKey: Boolean(apiKey && apiKey.length > 0),
+      hasKeyId: Boolean(keyId && keyId.length > 0),
+      keyIdPreview: keyId ? `${keyId.substring(0, 8)}...` : null,
+      model: config.NOUS_MODEL || this.defaultModel,
+      baseUrl: config.NOUS_API_BASE_URL || this.baseUrl,
+      timeoutMs: config.NOUS_TIMEOUT_MS || this.timeoutMs,
+    };
+  }
+
+  /**
    * Fetch live waste category list and active buying prices from SQLite/MySQL
    */
   async getLiveWastePricesContext() {
@@ -597,7 +615,7 @@ PANDUAN TAMBAHAN:
             const item = top.item;
             const unit = (item.unit || 'KG').toUpperCase();
             const buyStr = `Rp ${Number(item.buying_price).toLocaleString('id-ID')}`;
-            let reply = `Harga beli resmi **${item.name}** adalah **${buyStr} / ${unit}**`;
+            let reply = `Harga resmi Bank Sampah Digital untuk **${item.name}** adalah **${buyStr} / ${unit}**`;
             if (item.selling_price && Number(item.selling_price) > 0) {
               reply += ` (harga jual: Rp ${Number(item.selling_price).toLocaleString('id-ID')} / ${unit}).`;
             } else {

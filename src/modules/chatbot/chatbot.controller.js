@@ -9,6 +9,7 @@
 
 const nousChatbotService = require('../../services/ai/nous_chatbot.service');
 const aiAssistantService = require('../../services/ai/ai_assistant.service');
+const apiResponse = require('../../utils/apiResponse');
 
 class ChatbotController {
   /**
@@ -47,19 +48,19 @@ class ChatbotController {
       : null;
 
     try {
-      const result = await nousChatbotService.chat({
-        message: rawMessage.trim(),
+      const result = await aiAssistantService.processQuery({
+        query: rawMessage.trim(),
         history: Array.isArray(history) ? history : [],
         user: effectiveUser,
       });
 
-      const answer = String(result.reply || '').trim();
+      const answer = String(result.answer || result.reply || '').trim();
       if (!answer) {
         throw new Error('Asisten AI tidak menghasilkan jawaban.');
       }
 
-      // Map Nous chat response to controller response format
-      const source = result.source === 'DATABASE_TOOL' ? 'DATABASE_TOOL' : 'GENERAL_KNOWLEDGE';
+      // Map response to controller response format
+      const source = result.source || (result.intent === 'GENERAL_KNOWLEDGE' ? 'GENERAL_KNOWLEDGE' : 'DATABASE_TOOL');
       const functionCall = result.functionCall ? {
         tool: result.functionCall.tool,
         arguments: result.functionCall.arguments,
@@ -74,6 +75,8 @@ class ChatbotController {
         model: result.model || 'nous-general-knowledge',
         authorized: result.authorized !== false,
         source: source,
+        intent: result.intent,
+        data: result.data,
         functionCall: functionCall,
         roleAccess: effectiveUser?.role === 'ADMIN' ? 'ADMIN_FULL_ACCESS' : (effectiveUser ? 'AUTHENTICATED_RESTRICTED' : 'GUEST'),
         user: effectiveUser ? { id: effectiveUser.id, name: effectiveUser.name, role: effectiveUser.role } : null,

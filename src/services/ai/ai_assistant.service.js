@@ -666,7 +666,7 @@ class AiAssistantService {
           const item = top.item;
           const unit = (item.unit || 'KG').toUpperCase();
           const buyStr = `Rp ${Number(item.buying_price).toLocaleString('id-ID')}`;
-          let answer = `Harga beli resmi **${item.name}** adalah **${buyStr} / ${unit}**`;
+          let answer = `Harga resmi Bank Sampah Digital untuk **${item.name}** adalah **${buyStr} / ${unit}**`;
           if (item.selling_price && Number(item.selling_price) > 0) {
             answer += ` (harga jual: Rp ${Number(item.selling_price).toLocaleString('id-ID')} / ${unit}).`;
           } else {
@@ -1352,7 +1352,7 @@ class AiAssistantService {
       if (q.includes('berapa user') || q.includes('brapa user') || q.includes('jumlah user') || q.includes('ada berapa user') || q.includes('ada brapa user') || q.includes('total user') || q.includes('berapa pengguna') || q.includes('jumlah pengguna')) {
         return {
           query,
-          answer: `Ada **${totalUsers.c}** pengguna terdaftar.`,
+          answer: `Total pengguna terdaftar adalah **${totalUsers.c}** orang.`,
           authorized: true,
           intent: 'USERS_COUNT',
           source: 'DATABASE_TOOL',
@@ -1699,7 +1699,7 @@ class AiAssistantService {
     // 1) Delegasikan pertanyaan umum ke model AI Nous Research
     try {
       const result = await nousChatbotService.chat({ message: query, history, user });
-      if (result && typeof result.reply === 'string' && result.reply.trim()) {
+      if (result && typeof result.reply === 'string' && result.reply.trim() && !result.reply.includes('layanan AI sedang tidak tersedia')) {
         return result.reply.trim();
       }
     } catch (err) {
