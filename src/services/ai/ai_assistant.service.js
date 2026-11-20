@@ -97,8 +97,45 @@ class AiAssistantService {
       };
     }
 
+    // 00-A. Intent: Tujuan Dibuatnya Sistem Bank Sampah Digital ("apa tujuan dibuatnya sistem bank sampah digital", dll)
+    const isPurposeQuery =
+      (q.includes('tujuan') || q.includes('kenapa dibuat') || q.includes('mengapa dibuat') || q.includes('alasan dibuat') || q.includes('fungsi sistem') || q.includes('kegunaan sistem') || q.includes('mengapa ada') || q.includes('kenapa ada')) &&
+      (q.includes('bank sampah') || q.includes('bsd') || q.includes('sistem') || q.includes('aplikasi'));
+
+    if (isPurposeQuery) {
+      return {
+        query,
+        answer:
+          `**Tujuan Dibuatnya Sistem Bank Sampah Digital:**\n\n` +
+          `1. 🌱 **Mendorong Ekonomi Sirkular**: Mengubah sampah anorganik warga menjadi nilai ekonomis nyata berupa saldo tabungan rupiah digital dan poin reward hijau.\n\n` +
+          `2. 💻 **Digitalisasi & Transparansi**: Menggantikan pencatatan manual buku tabungan menjadi sistem digital real-time yang akurat, aman, dan dapat dipantau nasabah kapan saja.\n\n` +
+          `3. 📉 **Mengurangi Timbulan Sampah ke TPA**: Meminimalisasi volume sampah yang berakhir di TPA dengan memaksimalkan daur ulang sampah bernilai seperti botol plastik, kardus, kertas, logam, dan kaca.\n\n` +
+          `4. 👥 **Pemberdayaan Masyarakat**: Membangun kebiasaan warga memilah sampah dari sumbernya (rumah tangga) secara konsisten demi kelestarian lingkungan dan kesejahteraan bersama. 🌍♻️`,
+        authorized: true,
+        intent: 'BANK_SAMPAH_PURPOSE',
+        source: 'KNOWLEDGE_BASE',
+        functionCall: null,
+        data: null
+      };
+    }
+
     // 00. Intent: Pengertian / Definisi / Konsep Bank Sampah Digital ("apa itu bank sampah digital", "apa itu bank sampah", dll)
     const isConceptQuery =
+      (
+        (q.includes('bank sampah') || q.includes('bsd')) &&
+        (
+          q.includes('apa itu') ||
+          q.includes('apa sih') ||
+          q.includes('apa yang') ||
+          q.includes('pengertian') ||
+          q.includes('definisi') ||
+          q.includes('maksud') ||
+          q.includes('konsep') ||
+          q.includes('tentang') ||
+          q.includes('jelaskan') ||
+          q.includes('latar belakang')
+        )
+      ) ||
       q.includes('apa itu bank sampah') ||
       q.includes('apa bank sampah') ||
       q.includes('apa itu bsd') ||
@@ -106,13 +143,6 @@ class AiAssistantService {
       q.includes('pengertian bank sampah') ||
       q.includes('definisi bank sampah') ||
       q.includes('tentang bank sampah') ||
-      q.includes('konsep bank sampah') ||
-      q.includes('maksud bank sampah') ||
-      q.includes('fungsi bank sampah') ||
-      q.includes('tujuan bank sampah') ||
-      q.includes('latar belakang bank sampah') ||
-      q.includes('apa yang dimaksud bank sampah') ||
-      q.includes('jelaskan bank sampah') ||
       q === 'bank sampah digital' ||
       q === 'bank sampah';
 
