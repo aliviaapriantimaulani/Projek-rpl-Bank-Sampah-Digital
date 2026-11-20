@@ -223,8 +223,6 @@ Struktur database dikelola menggunakan **migrasi Knex.js** yang mencakup tabel-t
 
 | Dokumentasi | Tautan |
 |-------------|--------|
-| Video Progres 1 | *(akan diisi setelah video tersedia)* |
-| Video Progres 2 | *(akan diisi setelah video tersedia)* |
 | Video Final Demo | *(akan diisi setelah video tersedia)* |
 
 ---
