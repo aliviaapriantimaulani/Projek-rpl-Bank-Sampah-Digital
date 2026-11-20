@@ -97,6 +97,183 @@ class AiAssistantService {
       };
     }
 
+    // 00. Intent: Pengertian / Definisi / Konsep Bank Sampah Digital ("apa itu bank sampah digital", "apa itu bank sampah", dll)
+    const isConceptQuery =
+      q.includes('apa itu bank sampah') ||
+      q.includes('apa bank sampah') ||
+      q.includes('apa itu bsd') ||
+      q.includes('apa bsd') ||
+      q.includes('pengertian bank sampah') ||
+      q.includes('definisi bank sampah') ||
+      q.includes('tentang bank sampah') ||
+      q.includes('konsep bank sampah') ||
+      q.includes('maksud bank sampah') ||
+      q.includes('fungsi bank sampah') ||
+      q.includes('tujuan bank sampah') ||
+      q.includes('latar belakang bank sampah') ||
+      q.includes('apa yang dimaksud bank sampah') ||
+      q.includes('jelaskan bank sampah') ||
+      q === 'bank sampah digital' ||
+      q === 'bank sampah';
+
+    if (isConceptQuery) {
+      return {
+        query,
+        answer:
+          `**Bank Sampah Digital** adalah platform pengelolaan sampah modern berbasis pemberdayaan masyarakat dan **ekonomi sirkular** yang mendigitalisasi proses pemilahan, penimbangan, dan pencatatan sampah bernilai ekonomis.\n\n` +
+          `Melalui sistem ini, sampah anorganik yang dipilah warga (seperti botol plastik, kardus, kertas, logam, kaca, dan minyak jelantah) ditimbang di loket dan langsung dikonversi menjadi **saldo tabungan rupiah digital** serta **Poin Reward Hijau** yang dapat dicairkan atau ditukar sembako/hadiah.\n\n` +
+          `**3 Langkah Utama:**\n` +
+          `1. 🏠 **Pilah Sampah**: Warga memilah sampah bernilai daur ulang dari rumah dalam kondisi bersih dan kering.\n` +
+          `2. ⚖️ **Timbang di Loket**: Petugas loket menimbang sampah dan mencatat transaksi langsung ke aplikasi sistem secara real-time.\n` +
+          `3. 💰 **Tabungan & Reward**: Saldo rupiah otomatis bertambah di buku tabungan digital nasabah dan mendapatkan Poin Reward Hijau yang bisa ditukar hadiah menarik! 🌱`,
+        authorized: true,
+        intent: 'BANK_SAMPAH_DEFINITION',
+        source: 'KNOWLEDGE_BASE',
+        functionCall: null,
+        data: {
+          concept: 'Bank Sampah Digital',
+          pillar: 'Ekonomi Sirkular & Pemberdayaan Masyarakat',
+          steps: ['Pilah dari Rumah', 'Timbang di Loket', 'Tabungan & Reward Poin Hijau']
+        }
+      };
+    }
+
+    // 00-B. Intent: Alur & Cara Kerja / Cara Menabung / Cara Setor Sampah ("bagaimana cara kerja bank sampah", "alur setor sampah", dll)
+    const isWorkflowQuery =
+      (q.includes('cara kerja') && (q.includes('bank sampah') || q.includes('sistem') || q.includes('aplikasi') || q.includes('bsd'))) ||
+      (q.includes('alur') && (q.includes('bank sampah') || q.includes('setor') || q.includes('menabung') || q.includes('sampah') || q.includes('transaksi'))) ||
+      (q.includes('bagaimana') && (q.includes('cara kerja') || q.includes('setor sampah') || q.includes('menabung sampah') || q.includes('nabung sampah'))) ||
+      q.includes('cara menabung sampah') ||
+      q.includes('cara setor sampah') ||
+      q.includes('gimana cara nabung sampah') ||
+      q.includes('alur menabung sampah');
+
+    if (isWorkflowQuery) {
+      return {
+        query,
+        answer:
+          `**Alur & Cara Kerja Menabung Sampah di Bank Sampah Digital:**\n\n` +
+          `1. 🏠 **Pilah Sampah dari Rumah**:\n` +
+          `   Pisahkan sampah anorganik bernilai ekonomis (botol plastik, kardus, kertas, kaleng logam, kaca) dalam kondisi bersih dan kering dari sampah basah/organik.\n\n` +
+          `2. 📍 **Bawa ke Loket Bank Sampah**:\n` +
+          `   Datangi loket Bank Sampah Digital terdekat. Tunjukkan nomor rekening nasabah atau scan QR Code kartu digital Anda kepada petugas loket.\n\n` +
+          `3. ⚖️ **Timbang & Catat Real-Time**:\n` +
+          `   Petugas loket menimbang sampah secara terbuka dan mencatat kategori serta bobotnya langsung ke aplikasi sistem.\n\n` +
+          `4. 💰 **Saldo & Poin Otomatis Masuk**:\n` +
+          `   Nilai rupiah setoran langsung masuk ke **Buku Tabungan Digital** Anda, ditambah perolehan **Poin Reward Hijau** yang otomatis terakumulasi.\n\n` +
+          `5. 🎁 **Pencairan Saldo & Tukar Reward**:\n` +
+          `   Saldo dapat ditarik tunai/transfer kapan saja, dan poin dapat ditukar sembako atau produk daur ulang di katalog reward! ♻️`,
+        authorized: true,
+        intent: 'BANK_SAMPAH_WORKFLOW',
+        source: 'KNOWLEDGE_BASE',
+        functionCall: null,
+        data: null
+      };
+    }
+
+    // 00-C. Intent: Manfaat & Keuntungan Menabung di Bank Sampah
+    const isBenefitQuery =
+      (q.includes('manfaat') || q.includes('keuntungan') || q.includes('untung') || q.includes('faedah')) &&
+      (q.includes('bank sampah') || q.includes('menabung') || q.includes('nabung') || q.includes('ikut'));
+
+    if (isBenefitQuery) {
+      return {
+        query,
+        answer:
+          `**Manfaat & Keuntungan Bergabung dengan Bank Sampah Digital:**\n\n` +
+          `- 💰 **Nilai Ekonomis (Uang Tambahan)**: Sampah terpilah tidak dibuang percuma, melainkan menghasilkan rupiah yang tercatat rapi di buku tabungan digital.\n` +
+          `- 🎁 **Poin Reward & Hadiah**: Setiap kilogram sampah yang disetor menghasilkan Poin Hijau yang bisa ditukar sembako, minyak goreng, atau hadiah menarik.\n` +
+          `- 📱 **Pencatatan Digital Transparan**: Memiliki buku tabungan digital dengan riwayat mutasi setoran dan penarikan yang aman dan akurat.\n` +
+          `- 🌍 **Menjaga Lingkungan Hidup**: Mengurangi beban timbulan sampah ke TPA, mengurangi pencemaran plastik, serta mewujudkan ekonomi sirkular ramah lingkungan. 🌱`,
+        authorized: true,
+        intent: 'BANK_SAMPAH_BENEFITS',
+        source: 'KNOWLEDGE_BASE',
+        functionCall: null,
+        data: null
+      };
+    }
+
+    // 00-D. Intent: Sampah apa saja yang diterima / Kategori sampah yang bisa disetor
+    const isAcceptedWasteQuery =
+      (q.includes('sampah apa') && (q.includes('terima') || q.includes('diterima') || q.includes('bisa disetor') || q.includes('bisa ditabung') || q.includes('bisa dijual'))) ||
+      (q.includes('jenis sampah') && (q.includes('diterima') || q.includes('apa saja') || q.includes('bisa disetor'))) ||
+      (q.includes('kategori sampah') && (q.includes('apa saja') || q.includes('tersedia') || q.includes('diterima'))) ||
+      q.includes('bisa setor apa saja') ||
+      q.includes('apa saja yang bisa disetor');
+
+    if (isAcceptedWasteQuery) {
+      try {
+        const catRows = await db('waste_categories')
+          .leftJoin('waste_prices', function () {
+            this.on('waste_categories.id', '=', 'waste_prices.waste_category_id')
+              .andOn('waste_prices.is_active', '=', db.raw('?', [1]));
+          })
+          .where('waste_categories.is_active', 1)
+          .select('waste_categories.name', 'waste_categories.unit', 'waste_prices.buying_price');
+
+        if (catRows && catRows.length > 0) {
+          const listText = catRows.map((c, i) => {
+            const price = c.buying_price ? ` - Rp ${Number(c.buying_price).toLocaleString('id-ID')}/${c.unit}` : '';
+            return `${i + 1}. **${c.name}**${price}`;
+          }).join('\n');
+
+          return {
+            query,
+            answer:
+              `Berikut jenis sampah anorganik yang diterima di **Bank Sampah Digital** (kondisi bersih & kering):\n\n` +
+              listText +
+              `\n\n📌 *Catatan: Pastikan sampah botol plastik telah dibilas dan botol kaca tidak pecah.*`,
+            authorized: true,
+            intent: 'ACCEPTED_WASTE_CATEGORIES',
+            source: 'DATABASE_TOOL',
+            data: catRows
+          };
+        }
+      } catch (e) {}
+
+      return {
+        query,
+        answer:
+          `Jenis sampah yang diterima di **Bank Sampah Digital** meliputi:\n\n` +
+          `1. 🧴 **Plastik**: Botol PET bersih (air mineral), gelas plastik (PP), botol shampo/sabun (HDPE), kantong kresek bersih.\n` +
+          `2. 📦 **Kertas & Karton**: Kardus cokelat tebal, buku tulis/HVS, koran, majalah.\n` +
+          `3. 🔩 **Logam & Besi**: Besi tua, kaleng biskuit, kaleng minuman aluminium, kuningan, tembaga.\n` +
+          `4. 🍾 **Kaca**: Botol kecap, sirup, atau bir utuh (tidak pecah).\n` +
+          `5. 🛢️ **Minyak Jelantah**: Minyak goreng bekas pakai yang disaring dalam botol/jeriken.\n\n` +
+          `*Pastikan sampah disetor dalam kondisi bersih dan kering untuk mendapatkan nilai timbangan optimal.*`,
+        authorized: true,
+        intent: 'ACCEPTED_WASTE_CATEGORIES',
+        source: 'KNOWLEDGE_BASE',
+        data: null
+      };
+    }
+
+    // 00-E. Intent: Cara Penarikan Saldo & Penukaran Hadiah
+    const isWithdrawRewardQuery =
+      (q.includes('cara') || q.includes('bagaimana') || q.includes('gimana')) &&
+      (q.includes('tarik saldo') || q.includes('tarik uang') || q.includes('mencairkan') || q.includes('cairkan saldo') || q.includes('penarikan dana') || q.includes('tukar poin') || q.includes('tukar reward') || q.includes('tukar hadiah'));
+
+    if (isWithdrawRewardQuery) {
+      return {
+        query,
+        answer:
+          `**Panduan Penarikan Saldo & Penukaran Hadiah:**\n\n` +
+          `💵 **1. Penarikan Saldo Tabungan**:\n` +
+          `- Masuk ke menu **Buku Tabungan** pada dasbor akun Anda.\n` +
+          `- Klik tombol **Tarik Saldo** dan masukkan nominal yang ingin ditarik.\n` +
+          `- Pilih metode pencairan: **Tunai di Loket**, **Transfer Bank**, atau **E-Wallet** (GoPay/OVO/DANA).\n` +
+          `- Konfirmasi pengajuan dengan PIN Anda. Petugas/Admin akan memverifikasi dan menyerahkan dana.\n\n` +
+          `🎁 **2. Penukaran Poin Reward Hijau**:\n` +
+          `- Buka menu **Katalog Reward / Hadiah**.\n` +
+          `- Pilih sembako (minyak, beras, gula) atau merchandise sesuai saldo poin Anda.\n` +
+          `- Klik **Tukar Poin**, dan tukarkan voucher penukaran Anda di loket Bank Sampah Digital! ⭐`,
+        authorized: true,
+        intent: 'WITHDRAW_AND_REWARD_GUIDE',
+        source: 'KNOWLEDGE_BASE',
+        data: null
+      };
+    }
+
     // 0A. Intent: Pertanyaan Identitas Pengguna ("siapa saya", "siapa aku", "identitas saya", "role saya apa")
     if (
       q.includes('siapa saya') ||
@@ -349,6 +526,7 @@ class AiAssistantService {
         'terdaftar', 'nya', 'ya', 'dong', 'kah', 'tolong', 'bisa', 'mohon'
       ];
       const candidate = q
+        .replace(/[?!.,;:()]/g, ' ')
         .split(/\s+/)
         .filter(w => !stopWords.includes(w.toLowerCase()))
         .join(' ')
@@ -377,6 +555,19 @@ class AiAssistantService {
             .first();
         } catch (dbErr) {
           console.warn('[AiAssistant] Error finding customer:', dbErr.message);
+        }
+
+        if (!customer) {
+          if (q.includes('saldo') || q.includes('tabungan') || q.includes('poin') || q.includes('point')) {
+            return {
+              query,
+              answer: `Data nasabah dengan nama atau nomor akun "**${candidate}**" tidak ditemukan di sistem. Pastikan nama atau nomor rekening yang dimasukkan sudah benar.`,
+              authorized: true,
+              intent: 'CUSTOMER_NOT_FOUND',
+              source: 'DATABASE_TOOL',
+              data: null,
+            };
+          }
         }
 
         if (customer) {
@@ -1732,16 +1923,25 @@ class AiAssistantService {
       );
     }
 
-    // 4) Jawaban fallback yang informatif dan ramah (tanpa melempar error kaku)
+    if (q.includes('jelantah') || q.includes('minyak')) {
+      return (
+        `${nameGreeting}Minyak jelantah (minyak goreng bekas) jangan dibuang ke saluran air atau tanah karena dapat mencemari lingkungan. ` +
+        `Kumpulkan dalam botol atau jeriken tertutup setelah dingin dan disaring, lalu setorkan ke Bank Sampah Digital untuk diolah menjadi energi biodiesel ramah lingkungan! 🛢️`
+      );
+    }
+
+    if (q.includes('lingkungan') || q.includes('emisi') || q.includes('karbon') || q.includes('tpa') || q.includes('bumi')) {
+      return (
+        `${nameGreeting}Daur ulang sampah melalui Bank Sampah Digital berdampak nyata mengurangi beban TPA dan menekan emisi gas rumah kaca. ` +
+        `Setiap 1 kg plastik yang didaur ulang mampu menghemat sekitar 1.5 kg emisi karbon (CO2) serta menghemat energi fosil. Mari terus pilah sampah dari rumah! 🌍🌱`
+      );
+    }
+
+    // 4) Jawaban fallback yang informatif dan ramah (to the point, tanpa melempar menu kaku yang panjang)
     return (
-      `${nameGreeting}Terima kasih telah menghubungi **Asisten AI Bank Sampah Digital**.\n\n` +
-      `Saya siap membantu Anda dengan berbagai informasi dan layanan berikut:\n` +
-      `- 👥 **Informasi Peran Sistem**: Tanyakan *"Ada berapa role?"* atau *"Role apa saja?"*\n` +
-      `- 💰 **Informasi Harga Sampah**: Tanyakan *"Berapa harga sampah botol plastik?"* atau *"Harga kardus per kg"*\n` +
-      `- 💳 **Informasi Akun & Saldo**: Tanyakan *"Berapa saldo saya?"* atau *"Siapa saya?"*\n` +
-      `- ♻️ **Panduan Pemilahan**: Tanyakan *"Bagaimana cara membuat kompos?"* atau *"Alur menabung sampah"*\n` +
-      `- 📊 **Statistik & Fitur**: Tanyakan *"Fitur apa saja"* atau *"Status WhatsApp"*\n\n` +
-      `Silakan ketik pertanyaan Anda sesuai topik di atas, atau tanyakan langsung apa yang ingin Anda ketahui! 😊`
+      `${nameGreeting}Saya **Asisten AI Bank Sampah Digital** siap membantu Anda. ` +
+      `Anda dapat menanyakan tentang **pengertian bank sampah**, **alur menabung**, **daftar harga sampah resmi**, **cek saldo/poin**, atau **panduan daur ulang**.\n\n` +
+      `Ada yang ingin Anda tanyakan seputar Bank Sampah Digital? 😊`
     );
   }
 }

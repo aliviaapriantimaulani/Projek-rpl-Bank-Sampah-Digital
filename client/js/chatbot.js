@@ -284,6 +284,11 @@ const Chatbot = {
         'google/gemini-1.5-pro': 'Google Gemini 1.5 Pro',
         'grok': 'xAI Grok 2',
         'xai/grok-2': 'xAI Grok 2',
+        'qwen': 'Groq Qwen 2.5 27B',
+        'qwen/qwen3.8-27b': 'Groq Qwen 2.5 27B',
+        'openai/gpt-oss-120b': 'Groq GPT-OSS 120B',
+        'knowledge-base': 'Asisten AI Bank Sampah',
+        'database-tool': 'Asisten AI & Real-Time Database',
       };
       const activeModelKey = (typeof State !== 'undefined' && State.getAiModel)
         ? State.getAiModel()
