@@ -232,6 +232,34 @@ class AiAssistantService {
       };
     }
 
+    // 00-F. Intent: Penjelasan Mengapa Saldo Nasabah Bertambah ("mengapa saldo nasabah bisa bertambah", dll)
+    const isBalanceIncreaseQuery =
+      (q.includes('mengapa') || q.includes('kenapa') || q.includes('bagaimana') || q.includes('gimana') || q.includes('alasan') || q.includes('sebab') || q.includes('dari mana')) &&
+      (q.includes('saldo') || q.includes('tabungan')) &&
+      (q.includes('bertambah') || q.includes('nambah') || q.includes('masuk') || q.includes('dapat') || q.includes('diperoleh') || q.includes('asal') || q.includes('bisa'));
+
+    if (isBalanceIncreaseQuery) {
+      return {
+        query,
+        answer:
+          `**Mengapa Saldo Nasabah di Bank Sampah Digital Bisa Bertambah?**\n\n` +
+          `Saldo buku tabungan digital nasabah dapat bertambah melalui mekanisme berikut:\n\n` +
+          `1. ⚖️ **Penyetoran Sampah Daur Ulang**:\n` +
+          `   Nasabah membawa sampah anorganik terpilah (seperti botol plastik, kardus, kertas, kaleng logam, kaca, atau minyak jelantah) ke loket Bank Sampah Digital untuk ditimbang oleh petugas.\n\n` +
+          `2. 💰 **Konversi Otomatis Sesuai Harga Katalog (Berat × Harga)**:\n` +
+          `   Sistem secara otomatis menghitung nilai rupiah setoran:\n` +
+          `   $$\\text{Nilai Setoran} = \\text{Berat Sampah (kg)} \\times \\text{Harga Beli Resmi (Rp/kg)}$$\n` +
+          `   Nilai rupiah tersebut langsung dikreditkan (masuk) ke **Buku Tabungan Digital** nasabah saat transaksi dicatat secara real-time.\n\n` +
+          `3. 🎁 **Bonus Poin Reward Hijau**:\n` +
+          `   Selain saldo uang, nasabah juga otomatis mendapatkan **Poin Reward Hijau** untuk setiap kilogram sampah yang disetor, yang dapat ditukar dengan sembako atau hadiah menarik! 🌱`,
+        authorized: true,
+        intent: 'BALANCE_INCREASE_EXPLANATION',
+        source: 'KNOWLEDGE_BASE',
+        functionCall: null,
+        data: null
+      };
+    }
+
     // 00-C. Intent: Manfaat & Keuntungan Menabung di Bank Sampah
     const isBenefitQuery =
       (q.includes('manfaat') || q.includes('keuntungan') || q.includes('untung') || q.includes('faedah')) &&
@@ -569,7 +597,15 @@ class AiAssistantService {
     }
 
     // 0D. Intent: Saldo / Poin / Data Spesifik Nasabah Berdasarkan Nama atau No. Rekening ("berapa jumlah saldo tabungan bina", "saldo budi", dll)
+    const nonCustomerLookupWords = [
+      'mengapa', 'kenapa', 'bagaimana', 'gimana', 'apakah', 'kapan', 'alasan',
+      'sebab', 'bertambah', 'berkurang', 'nambah', 'cara', 'alur', 'tahapan',
+      'dapat apa', 'fungsinya', 'tujuannya', 'masuk', 'keluar', 'cair', 'ditarik'
+    ];
+    const isConceptOrQuestion = nonCustomerLookupWords.some(w => q.includes(w));
+
     const isCustomerDataQuery =
+      !isConceptOrQuestion &&
       (q.includes('saldo') || q.includes('tabungan') || q.includes('poin') || q.includes('point') || q.includes('rekening') || q.includes('setoran') || q.includes('sampah')) &&
       !q.includes('saldo saya') &&
       !q.includes('poin saya') &&
@@ -619,7 +655,20 @@ class AiAssistantService {
         }
 
         if (!customer) {
-          if (q.includes('saldo') || q.includes('tabungan') || q.includes('poin') || q.includes('point')) {
+          const isExplicitPersonBalance =
+            q.startsWith('saldo ') ||
+            q.startsWith('cek saldo ') ||
+            q.startsWith('tabungan ') ||
+            q.startsWith('poin ') ||
+            q.startsWith('berapa saldo ') ||
+            q.startsWith('berapa tabungan ') ||
+            q.startsWith('berapa poin ') ||
+            q.includes('saldo milik') ||
+            q.includes('saldo atas nama') ||
+            q.includes('saldo si ') ||
+            candidate.toLowerCase().startsWith('nsb-');
+
+          if (isExplicitPersonBalance && candidate.split(' ').length <= 3) {
             return {
               query,
               answer: `Data nasabah dengan nama atau nomor akun "**${candidate}**" tidak ditemukan di sistem. Pastikan nama atau nomor rekening yang dimasukkan sudah benar.`,

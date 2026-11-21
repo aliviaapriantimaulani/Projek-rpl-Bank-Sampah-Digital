@@ -485,6 +485,32 @@ PANDUAN TAMBAHAN:
       };
     }
 
+    // 00-F. DETEKSI MENGAPA SALDO NASABAH BISA BERTAMBAH
+    const isBalanceIncreaseQuery =
+      (q.includes('mengapa') || q.includes('kenapa') || q.includes('bagaimana') || q.includes('gimana') || q.includes('alasan') || q.includes('sebab') || q.includes('dari mana')) &&
+      (q.includes('saldo') || q.includes('tabungan')) &&
+      (q.includes('bertambah') || q.includes('nambah') || q.includes('masuk') || q.includes('dapat') || q.includes('diperoleh') || q.includes('asal') || q.includes('bisa'));
+
+    if (isBalanceIncreaseQuery) {
+      return {
+        reply:
+          `**Mengapa Saldo Nasabah di Bank Sampah Digital Bisa Bertambah?**\n\n` +
+          `Saldo buku tabungan digital nasabah dapat bertambah melalui mekanisme berikut:\n\n` +
+          `1. ⚖️ **Penyetoran Sampah Daur Ulang**:\n` +
+          `   Nasabah membawa sampah anorganik terpilah (botol plastik, kardus, kertas, kaleng logam, kaca, atau minyak jelantah) ke loket Bank Sampah Digital untuk ditimbang oleh petugas.\n\n` +
+          `2. 💰 **Konversi Otomatis Sesuai Harga Katalog (Berat × Harga)**:\n` +
+          `   Sistem secara otomatis menghitung nilai rupiah setoran:\n` +
+          `   $$\\text{Nilai Setoran} = \\text{Berat Sampah (kg)} \\times \\text{Harga Beli Resmi (Rp/kg)}$$\n` +
+          `   Nilai rupiah tersebut langsung dikreditkan (masuk) ke **Buku Tabungan Digital** nasabah saat transaksi dicatat secara real-time.\n\n` +
+          `3. 🎁 **Bonus Poin Reward Hijau**:\n` +
+          `   Selain saldo uang, nasabah juga otomatis mendapatkan Poin Reward Hijau untuk setiap kilogram sampah yang disetor, yang dapat ditukar dengan sembako atau hadiah menarik! 🌱`,
+        source: 'KNOWLEDGE_BASE',
+        authorized: true,
+        functionCall: null,
+        model: 'knowledge-base',
+      };
+    }
+
     // 00-C. DETEKSI MANFAAT & KEUNTUNGAN
     const isBenefitQuery =
       (q.includes('manfaat') || q.includes('keuntungan') || q.includes('untung') || q.includes('faedah')) &&
@@ -688,7 +714,15 @@ PANDUAN TAMBAHAN:
     }
 
     // 4. Deteksi Pertanyaan Saldo / Tabungan / Poin / Data Spesifik Nasabah Berdasarkan Nama
+    const nonCustomerLookupWords = [
+      'mengapa', 'kenapa', 'bagaimana', 'gimana', 'apakah', 'kapan', 'alasan',
+      'sebab', 'bertambah', 'berkurang', 'nambah', 'cara', 'alur', 'tahapan',
+      'dapat apa', 'fungsinya', 'tujuannya', 'masuk', 'keluar', 'cair', 'ditarik'
+    ];
+    const isConceptOrQuestion = nonCustomerLookupWords.some(w => q.includes(w));
+
     const isCustomerDataQuery =
+      !isConceptOrQuestion &&
       (q.includes('saldo') || q.includes('tabungan') || q.includes('poin') || q.includes('point') || q.includes('rekening') || q.includes('setoran') || q.includes('sampah')) &&
       !q.includes('saldo saya') &&
       !q.includes('poin saya') &&
@@ -733,14 +767,29 @@ PANDUAN TAMBAHAN:
             )
             .first();
 
-          if (!cust && (q.includes('saldo') || q.includes('tabungan') || q.includes('poin') || q.includes('point'))) {
-            return {
-              reply: `Data nasabah dengan nama atau nomor akun "**${candidate}**" tidak ditemukan di sistem. Pastikan nama atau nomor rekening yang dimasukkan sudah benar.`,
-              source: 'DATABASE_TOOL',
-              authorized: true,
-              functionCall: null,
-              model: 'database-tool',
-            };
+          if (!cust) {
+            const isExplicitPersonBalance =
+              q.startsWith('saldo ') ||
+              q.startsWith('cek saldo ') ||
+              q.startsWith('tabungan ') ||
+              q.startsWith('poin ') ||
+              q.startsWith('berapa saldo ') ||
+              q.startsWith('berapa tabungan ') ||
+              q.startsWith('berapa poin ') ||
+              q.includes('saldo milik') ||
+              q.includes('saldo atas nama') ||
+              q.includes('saldo si ') ||
+              candidate.toLowerCase().startsWith('nsb-');
+
+            if (isExplicitPersonBalance && candidate.split(' ').length <= 3) {
+              return {
+                reply: `Data nasabah dengan nama atau nomor akun "**${candidate}**" tidak ditemukan di sistem. Pastikan nama atau nomor rekening yang dimasukkan sudah benar.`,
+                source: 'DATABASE_TOOL',
+                authorized: true,
+                functionCall: null,
+                model: 'database-tool',
+              };
+            }
           }
 
           if (cust) {
