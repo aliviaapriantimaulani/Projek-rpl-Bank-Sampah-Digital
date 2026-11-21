@@ -318,7 +318,7 @@ class AiAssistantService {
             data: catRows
           };
         }
-      } catch (e) {}
+      } catch (e) { }
 
       return {
         query,
@@ -509,7 +509,7 @@ class AiAssistantService {
               data: customerList,
             };
           }
-        } catch (e) {}
+        } catch (e) { }
         return {
           query,
           answer: 'Nasabah warga terdaftar antara lain **Budi Santoso (Warga RT 03)** dan Siti Aminah.',
@@ -715,7 +715,7 @@ class AiAssistantService {
                 .sum('total_weight_kg as total')
                 .first();
               weight = parseFloat(depAgg?.total || 0);
-            } catch (e) {}
+            } catch (e) { }
             return {
               query,
               answer: `Total sampah yang disetorkan **${customer.name}** adalah **${weight.toLocaleString('id-ID')} kg**.`,
@@ -1486,12 +1486,12 @@ class AiAssistantService {
     ) {
       const schemaSummary = await databaseSchemaService.getSchemaSummaryForAI(userRole);
       let answer = `**Struktur Database Bank Sampah Digital** (${schemaSummary.summary.totalTables} tabel):\n\n`;
-      
+
       for (const table of schemaSummary.tables) {
         answer += `### 📋 ${table.name}\n${table.description}\n`;
         answer += `Kolom: ${table.columns.map(c => `\`${c.name}\` (${c.type}${c.primaryKey ? ', PK' : ''}${c.notNull ? ', NOT NULL' : ''})`).join(', ')}\n\n`;
       }
-      
+
       if (schemaSummary.relationships.length) {
         answer += `### 🔗 Relasi Utama\n`;
         for (const rel of schemaSummary.relationships.slice(0, 10)) {
@@ -1633,7 +1633,7 @@ class AiAssistantService {
         db('inventory').sum('current_stock_kg as total').first(),
         db('withdrawal_requests').count('id as c').first(),
         db('waste_deposit_transactions')
-          .where('transaction_date', '>=', new Date(new Date().setHours(0,0,0,0)))
+          .where('transaction_date', '>=', new Date(new Date().setHours(0, 0, 0, 0)))
           .count('id as c').first()
       ]);
 
@@ -1782,7 +1782,7 @@ class AiAssistantService {
         };
       }
 
-      const list = recent.map((t, i) => 
+      const list = recent.map((t, i) =>
         `${i + 1}. **${t.transaction_no}** - ${new Date(t.transaction_date).toLocaleString('id-ID')}\n` +
         `   Nasabah: ${t.customer_name} (${t.account_no}) | ${parseFloat(t.total_weight_kg).toLocaleString('id-ID')} kg | Rp ${parseFloat(t.total_amount).toLocaleString('id-ID')} | ${t.status}`
       ).join('\n\n');
@@ -1797,11 +1797,32 @@ class AiAssistantService {
     }
 
     // 14. Intent: Cari Data ("Cari nasabah", "Cari transaksi", "Data nasabah [nama]", "Transaksi [nomor]")
+    const isSearchCapabilityQuestion =
+      (q.includes('apakah') || q.includes('bisa') || q.includes('dapatkah') || q.includes('gimana cara')) &&
+      (q.includes('bisa mencari') || q.includes('bisa bantu') || q.includes('bisa cari') || q.includes('membantu mencari') || q.includes('fitur pencarian'));
+
+    if (isSearchCapabilityQuestion) {
+      return {
+        query,
+        answer:
+          `**Ya, Asisten AI dapat membantu Anda mencari data transaksi dan nasabah secara real-time!** 🔍\n\n` +
+          `Anda dapat langsung mengetikkan kata kunci pencarian, contohnya:\n` +
+          `- 📋 **Cari Transaksi**: Ketik *"Cari transaksi TRX-20261120-0001"* atau *"Cari nomor transaksi"*.\n` +
+          `- 👤 **Cari Nasabah**: Ketik *"Cari nasabah Budi"*, *"Cari Siti"*, atau *"Cari nomor rekening NSB-2026-0001"*.\n` +
+          `- 💳 **Cek Saldo Spesifik**: Ketik *"Saldo Bina"* atau *"Poin Budi Santoso"*.\n\n` +
+          `Silakan sebutkan nama, nomor rekening, atau kode transaksi yang ingin Anda cari! 😊`,
+        authorized: true,
+        intent: 'SEARCH_CAPABILITY',
+        source: 'KNOWLEDGE_BASE',
+        data: null
+      };
+    }
+
     if (
       q.startsWith('cari ') ||
       q.startsWith('temukan ') ||
       q.startsWith('carikan ') ||
-      (q.includes('cari') && (q.includes('nasabah') || q.includes('transaksi') || q.includes('data')))
+      (!q.includes('apakah') && !q.includes('bisa') && q.includes('cari') && (q.includes('nasabah') || q.includes('transaksi') || q.includes('data')))
     ) {
       const searchTerm = q
         .replace(/^cari\s+/i, '')

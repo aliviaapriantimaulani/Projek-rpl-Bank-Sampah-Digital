@@ -511,6 +511,27 @@ PANDUAN TAMBAHAN:
       };
     }
 
+    // 00-G. DETEKSI PERTANYAAN KEMAMPUAN PENCARIAN DATA
+    const isSearchCapabilityQuestion =
+      (q.includes('apakah') || q.includes('bisa') || q.includes('dapatkah') || q.includes('gimana cara')) &&
+      (q.includes('bisa mencari') || q.includes('bisa bantu') || q.includes('bisa cari') || q.includes('membantu mencari') || q.includes('fitur pencarian'));
+
+    if (isSearchCapabilityQuestion) {
+      return {
+        reply:
+          `**Ya, Asisten AI dapat membantu Anda mencari data transaksi dan nasabah secara real-time!** 🔍\n\n` +
+          `Anda dapat langsung mengetikkan kata kunci pencarian, contohnya:\n` +
+          `- 📋 **Cari Transaksi**: Ketik *"Cari transaksi TRX-20261120-0001"* atau *"Cari nomor transaksi"*.\n` +
+          `- 👤 **Cari Nasabah**: Ketik *"Cari nasabah Budi"*, *"Cari Siti"*, atau *"Cari nomor rekening NSB-2026-0001"*.\n` +
+          `- 💳 **Cek Saldo Spesifik**: Ketik *"Saldo Bina"* atau *"Poin Budi Santoso"*.\n\n` +
+          `Silakan sebutkan nama, nomor rekening, atau kode transaksi yang ingin Anda cari! 😊`,
+        source: 'KNOWLEDGE_BASE',
+        authorized: true,
+        functionCall: null,
+        model: 'knowledge-base',
+      };
+    }
+
     // 00-C. DETEKSI MANFAAT & KEUNTUNGAN
     const isBenefitQuery =
       (q.includes('manfaat') || q.includes('keuntungan') || q.includes('untung') || q.includes('faedah')) &&
