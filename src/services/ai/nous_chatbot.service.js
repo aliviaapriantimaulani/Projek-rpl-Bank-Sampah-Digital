@@ -360,7 +360,65 @@ PANDUAN TAMBAHAN:
     const trimmedMsg = message.trim();
     const q = trimmedMsg.toLowerCase();
 
-    // 00-A. DETEKSI TUJUAN DIBUATNYA SISTEM BANK SAMPAH DIGITAL
+    // 00-A. DETEKSI CARA KERJA / ALUR SISTEM BANK SAMPAH DIGITAL ("jelaskan cara kerja sistem bank sampah digital dari awal sampai akhir", dll)
+    const isWorkflowQuery =
+      q.includes('cara kerja') ||
+      q.includes('bagaimana cara kerja') ||
+      q.includes('alur kerja') ||
+      q.includes('alur sistem') ||
+      q.includes('mekanisme kerja') ||
+      q.includes('proses kerja') ||
+      q.includes('awal sampai akhir') ||
+      q.includes('dari awal') ||
+      q.includes('cara menabung sampah') ||
+      q.includes('cara setor sampah') ||
+      q.includes('alur setor') ||
+      q.includes('alur menabung') ||
+      q.includes('gimana cara nabung') ||
+      (q.includes('alur') && (q.includes('bank sampah') || q.includes('setor') || q.includes('menabung') || q.includes('sampah') || q.includes('transaksi') || q.includes('sistem'))) ||
+      (q.includes('bagaimana') && (q.includes('cara kerja') || q.includes('setor sampah') || q.includes('menabung sampah') || q.includes('nabung sampah') || q.includes('kerja sistem')));
+
+    if (isWorkflowQuery) {
+      const isEndToEnd = q.includes('awal sampai akhir') || q.includes('dari awal') || q.includes('lengkap') || q.includes('sistem') || q.includes('jelaskan cara kerja');
+      const workflowAnswer = isEndToEnd
+        ? `**Alur & Cara Kerja Sistem Bank Sampah Digital (Dari Awal Sampai Akhir):**\n\n` +
+          `1. 📝 **Pendaftaran Nasabah (Registrasi Akun)**\n` +
+          `   - Warga mendaftar sebagai nasabah melalui aplikasi web atau dibantu petugas di loket.\n` +
+          `   - Nasabah mendapatkan nomor rekening unik (contoh: \`NSB-2026-0001\`) serta **Kartu Anggota Digital ber-QR Code**.\n\n` +
+          `2. 🏠 **Pemilahan Sampah dari Rumah**\n` +
+          `   - Nasabah memilah sampah anorganik bernilai ekonomis (botol plastik PET, gelas PP, kardus, kertas/HVS, kaleng aluminium, besi, kaca, dan minyak jelantah).\n` +
+          `   - Sampah dipastikan dalam kondisi **bersih, kering, dan terpisah** dari sampah organik dapur.\n\n` +
+          `3. ⚖️ **Penyetoran & Penimbangan di Loket**\n` +
+          `   - Nasabah membawa sampah ke loket Bank Sampah Digital dan menunjukkan QR Code / nomor rekening kepada **Petugas Timbang**.\n` +
+          `   - Petugas menimbang sampah secara terbuka dan mencatat kategori serta bobotnya (kg) langsung ke aplikasi sistem secara real-time.\n\n` +
+          `4. 💰 **Konversi Nilai Otomatis ke Saldo & Poin Reward**\n` +
+          `   - Sistem secara otomatis menghitung nilai rupiah berdasarkan bobot × harga beli resmi katalog.\n` +
+          `   - **Buku Tabungan Digital**: Saldo rupiah otomatis bertambah saat itu juga.\n` +
+          `   - **Poin Reward Hijau**: Nasabah otomatis memperoleh poin loyalitas untuk setiap kilogram sampah yang disetor.\n\n` +
+          `5. 📦 **Penyimpanan di Gudang (Manajemen Inventaris)**\n` +
+          `   - Sampah yang terkumpul masuk ke pencatatan stok gudang (*Inventory Management*) berdasarkan kategori untuk dipantau kapasitasnya secara digital.\n\n` +
+          `6. 🚚 **Penjualan ke Mitra Industri / Pengepul (Offtaker)**\n` +
+          `   - Setelah stok gudang memenuhi kuota, pihak pengelola (*Owner/Admin*) membuat transaksi penjualan ke pabrik daur ulang mitra dengan invoice resmi.\n\n` +
+          `7. 🎁 **Pencairan Saldo & Penukaran Hadiah (Tahap Akhir)**\n` +
+          `   - **Penarikan Saldo**: Nasabah dapat mencairkan saldo tabungan menjadi uang tunai di loket, transfer bank, atau e-wallet (GoPay/OVO/DANA).\n` +
+          `   - **Penukaran Poin**: Poin reward hijau dapat ditukarkan dengan sembako (beras, minyak, gula) atau produk daur ulang di katalog reward! ♻️🌱`
+        : `**Alur & Cara Kerja Menabung Sampah di Bank Sampah Digital:**\n\n` +
+          `1. 🏠 **Pilah Sampah dari Rumah**: Pisahkan sampah anorganik bersih (botol plastik, kardus, kertas, kaleng logam, kaca) dari sampah basah.\n\n` +
+          `2. 📍 **Bawa ke Loket**: Datangi loket Bank Sampah Digital terdekat dengan menunjukkan nomor rekening atau scan QR Code kartu anggota.\n\n` +
+          `3. ⚖️ **Timbang Real-Time**: Petugas loket menimbang sampah dan mencatat kategori serta bobotnya langsung ke sistem aplikasi.\n\n` +
+          `4. 💰 **Saldo & Poin Otomatis Masuk**: Nilai rupiah setoran langsung masuk ke **Buku Tabungan Digital** Anda, ditambah perolehan **Poin Reward Hijau**.\n\n` +
+          `5. 🎁 **Pencairan & Reward**: Saldo tabungan dapat ditarik tunai/transfer kapan saja, dan poin dapat ditukar sembako di katalog reward! ♻️`;
+
+      return {
+        reply: workflowAnswer,
+        source: 'KNOWLEDGE_BASE',
+        authorized: true,
+        functionCall: null,
+        model: 'knowledge-base',
+      };
+    }
+
+    // 00-B. DETEKSI TUJUAN DIBUATNYA SISTEM BANK SAMPAH DIGITAL
     const isPurposeQuery =
       (q.includes('tujuan') || q.includes('kenapa dibuat') || q.includes('mengapa dibuat') || q.includes('alasan dibuat') || q.includes('fungsi sistem') || q.includes('kegunaan sistem') || q.includes('mengapa ada') || q.includes('kenapa ada')) &&
       (q.includes('bank sampah') || q.includes('bsd') || q.includes('sistem') || q.includes('aplikasi'));
@@ -382,30 +440,34 @@ PANDUAN TAMBAHAN:
 
     // 00. DETEKSI PERTANYAAN DEFINISI / KONSEP BANK SAMPAH DIGITAL ("apa itu bank sampah digital", dll)
     const isConceptQuery =
+      !isWorkflowQuery &&
+      !isPurposeQuery &&
       (
-        (q.includes('bank sampah') || q.includes('bsd')) &&
         (
-          q.includes('apa itu') ||
-          q.includes('apa sih') ||
-          q.includes('apa yang') ||
-          q.includes('pengertian') ||
-          q.includes('definisi') ||
-          q.includes('maksud') ||
-          q.includes('konsep') ||
-          q.includes('tentang') ||
-          q.includes('jelaskan') ||
-          q.includes('latar belakang')
-        )
-      ) ||
-      q.includes('apa itu bank sampah') ||
-      q.includes('apa bank sampah') ||
-      q.includes('apa itu bsd') ||
-      q.includes('apa bsd') ||
-      q.includes('pengertian bank sampah') ||
-      q.includes('definisi bank sampah') ||
-      q.includes('tentang bank sampah') ||
-      q === 'bank sampah digital' ||
-      q === 'bank sampah';
+          (q.includes('bank sampah') || q.includes('bsd')) &&
+          (
+            q.includes('apa itu') ||
+            q.includes('apa sih') ||
+            q.includes('apa yang') ||
+            q.includes('pengertian') ||
+            q.includes('definisi') ||
+            q.includes('maksud') ||
+            q.includes('konsep') ||
+            q.includes('tentang') ||
+            q.includes('jelaskan') ||
+            q.includes('latar belakang')
+          )
+        ) ||
+        q.includes('apa itu bank sampah') ||
+        q.includes('apa bank sampah') ||
+        q.includes('apa itu bsd') ||
+        q.includes('apa bsd') ||
+        q.includes('pengertian bank sampah') ||
+        q.includes('definisi bank sampah') ||
+        q.includes('tentang bank sampah') ||
+        q === 'bank sampah digital' ||
+        q === 'bank sampah'
+      );
 
     if (isConceptQuery) {
       return {
@@ -416,37 +478,6 @@ PANDUAN TAMBAHAN:
           `1. 🏠 **Pilah Sampah**: Warga memilah sampah bernilai daur ulang dari rumah dalam kondisi bersih dan kering.\n` +
           `2. ⚖️ **Timbang di Loket**: Petugas loket menimbang sampah dan mencatat transaksi langsung ke aplikasi sistem secara real-time.\n` +
           `3. 💰 **Tabungan & Reward**: Saldo rupiah otomatis bertambah di buku tabungan digital nasabah dan mendapatkan Poin Reward Hijau yang bisa ditukar hadiah menarik! 🌱`,
-        source: 'KNOWLEDGE_BASE',
-        authorized: true,
-        functionCall: null,
-        model: 'knowledge-base',
-      };
-    }
-
-    // 00-B. DETEKSI CARA KERJA / ALUR MENABUNG SAMPAH
-    const isWorkflowQuery =
-      (q.includes('cara kerja') && (q.includes('bank sampah') || q.includes('sistem') || q.includes('aplikasi') || q.includes('bsd'))) ||
-      (q.includes('alur') && (q.includes('bank sampah') || q.includes('setor') || q.includes('menabung') || q.includes('sampah') || q.includes('transaksi'))) ||
-      (q.includes('bagaimana') && (q.includes('cara kerja') || q.includes('setor sampah') || q.includes('menabung sampah') || q.includes('nabung sampah'))) ||
-      q.includes('cara menabung sampah') ||
-      q.includes('cara setor sampah') ||
-      q.includes('gimana cara nabung sampah') ||
-      q.includes('alur menabung sampah');
-
-    if (isWorkflowQuery) {
-      return {
-        reply:
-          `**Alur & Cara Kerja Menabung Sampah di Bank Sampah Digital:**\n\n` +
-          `1. 🏠 **Pilah Sampah dari Rumah**:\n` +
-          `   Pisahkan sampah anorganik bernilai ekonomis (botol plastik, kardus, kertas, kaleng logam, kaca) dalam kondisi bersih dan kering dari sampah basah/organik.\n\n` +
-          `2. 📍 **Bawa ke Loket Bank Sampah**:\n` +
-          `   Datangi loket Bank Sampah Digital terdekat. Tunjukkan nomor rekening nasabah atau scan QR Code kartu digital Anda kepada petugas loket.\n\n` +
-          `3. ⚖️ **Timbang & Catat Real-Time**:\n` +
-          `   Petugas loket menimbang sampah secara terbuka dan mencatat kategori serta bobotnya langsung ke aplikasi sistem.\n\n` +
-          `4. 💰 **Saldo & Poin Otomatis Masuk**:\n` +
-          `   Nilai rupiah setoran langsung masuk ke **Buku Tabungan Digital** Anda, ditambah perolehan **Poin Reward Hijau** yang otomatis terakumulasi.\n\n` +
-          `5. 🎁 **Pencairan Saldo & Tukar Reward**:\n` +
-          `   Saldo dapat ditarik tunai/transfer kapan saja, dan poin dapat ditukar sembako atau produk daur ulang di katalog reward! ♻️`,
         source: 'KNOWLEDGE_BASE',
         authorized: true,
         functionCall: null,
